@@ -22,6 +22,7 @@ public class TestClass
 
     public TestClass giveRefence()
     {
+        // this gives refence to instance of class
         return this;
     }
 
