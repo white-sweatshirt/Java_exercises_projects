@@ -1,5 +1,6 @@
 import java.util.Arrays;
 import java.util.Scanner;
+import java.lang.Math;
 
 public class Main
 {
@@ -28,6 +29,9 @@ public class Main
         System.gc();
         changesToData(ala);
         System.out.println("ala.a = " + ala.a);
+        Circle circle1 = new Circle();
+        Circle circle2 = new Circle(2.32);
+        System.out.println();
 
     }
 
@@ -82,13 +86,35 @@ public class Main
     }
 
 }
-class  Circle
+
+class Circle
 {
     double radious;
-    static int numberOfCircles =0;
+    static int numberOfCircles = 0;
+
     public Circle()
     {
+        radious = 1.9;
+        numberOfCircles++;
 
     }
+
+    public Circle(double radious)
+    {
+        this.radious = radious;
+        numberOfCircles++;
+    }
+
+    public double giveArea()
+
+    {
+        return radious * radious * Math.PI;
+    }
+
+    public static int giveNumberOfCircles()
+    {
+        return numberOfCircles;
+    }
+
 
 }
