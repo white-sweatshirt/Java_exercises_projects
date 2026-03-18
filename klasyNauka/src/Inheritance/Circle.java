@@ -12,11 +12,13 @@ public class Circle extends GeometricObject
         super();
         this.radius = radius;
     }
-    
+
     @Override
     public double giveArea()
     {
+        super.testShow();
         return radius * radius * Math.PI;
+
     }
 
     @Override
