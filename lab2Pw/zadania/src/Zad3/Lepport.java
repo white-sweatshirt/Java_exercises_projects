@@ -1,35 +1,29 @@
 package Zad3;
 
-public class Lepport extends Thread implements Constans
-{
+public class Lepport extends Thread implements Constans {
     // Carpe Diem
     // chce to odpowiednik K1 oraz K2 czyli rezerwacji sekcji krytcznej
     private char znak;
-    static volatile boolean[] wybieranie = new boolean[nThreads];
-    static volatile int[] numerek = new int[nThreads];
+    static volatile boolean[] wybieranie = new boolean[N_THREADS];
+    static volatile int[] numerek = new int[N_THREADS];
     private int nr = 0;
     static boolean synchronise;
     private int nRepetions;
 
-    public void setSynchronise(boolean toSynchronise)
-    {
+    public void setSynchronise(boolean toSynchronise) {
         synchronise = toSynchronise;
     }
 
-    public Lepport(int nr, char character, int nRepetions)
-    {
+    public Lepport(int nr, char character, int nRepetions) {
         znak = character;
         this.nr = nr;
         this.nRepetions = nRepetions;
     }
 
-    private void privateJob()
-    {
-        try
-        {
+    private void privateJob() {
+        try {
             sleep((int) (Math.random() * 9 + 1));
-        } catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             System.out.println("DeckClass privateJob interrupted");
             System.out.println(e.getMessage());
         }
@@ -38,62 +32,53 @@ public class Lepport extends Thread implements Constans
 
     static final int TIMES_TO_WRITE = 100;
 
-    private void wirteSeparator()
-    {
+    private void wirteSeparator() {
         for (int i = 0; i < TIMES_TO_WRITE; i++)
             System.out.print(znak);
         System.out.print("\n");
     }
 
-    private void criticalSection(int numberOfRepetion)
-    {
+    private void criticalSection(int numberOfRepetion) {
         System.out.println("Sekcja krytyczna wątku: Lamport-" + (nr + 1) + ",nr powt.=" + numberOfRepetion);
         wirteSeparator();
     }
 
-    public void dzialanieNiesynchr()
-    {
-        for (int i = 0; i < nRepetions; i++)
-        {
+    public void dzialanieNiesynchr() {
+        for (int i = 0; i < nRepetions; i++) {
             privateJob();
             criticalSection(i);
         }
     }
 
-    public void dzialanieSynchr()
-    {
-        int oppositeNumber = (nr == 0 ? 1 : 0);
-
-        for (int i = 0; i < nRepetions; i++)
-        {
+    public void dzialanieSynchr() {
+        for (int i = 0; i < nRepetions; i++) {
             privateJob();
-            numerek[nr]=giveMax(numerek)+1;
-            wybieranie[nr]= false;
-            for(int j=0;j<nThreads;j++)
-            {
+            wybieranie[nr] = true;// wymusznie jednoznacznosici numerkow
+            numerek[nr] = giveMax(numerek) + 1 == Integer.MAX_VALUE ? 0 : giveMax(numerek) + 1;
+            wybieranie[nr] = false;
+            for (int j = 0; j < N_THREADS; j++) {
                 while (wybieranie[j])
                     ;
-                while (numerek[j] != 0 && numerek[j]<numerek[nr]&&j<nr)
+                while (numerek[j] != 0 && numerek[j] < numerek[nr] && j < nr)
                     ;
             }
             criticalSection(i);
+            numerek[nr] = 0;
         }
     }
 
     @Override
-    public void run()
-    {
-        if(synchronise)
-            synchronizedAct();
+    public void run() {
+        if (synchronise)
+            dzialanieSynchr();
         else
-            unsynchronizedAct();
+            dzialanieNiesynchr();
     }
 
-    public int giveMax(int[] table)
-    {
+    public int giveMax(int[] table) {
         int max = Integer.MIN_VALUE;
         for (int w : table)
-            if(w > max)
+            if (w > max)
                 max = w;
         return max;
     }
