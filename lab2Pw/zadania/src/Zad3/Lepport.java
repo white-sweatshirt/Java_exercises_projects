@@ -1,15 +1,12 @@
-package Zad2;
+package Zad3;
 
-public class Peterrson extends Thread
+public class Lepport extends Thread implements Constans
 {
     // Carpe Diem
-
     // chce to odpowiednik K1 oraz K2 czyli rezerwacji sekcji krytcznej
-    static volatile boolean[] chce = new boolean[2];
-    static volatile int czyjaKolej = 0;
     private char znak;
-
-
+    static volatile boolean[] wybieranie = new boolean[nThreads];
+    static volatile int[] numerek = new int[nThreads];
     private int nr = 0;
     static boolean synchronise;
     private int nRepetions;
@@ -19,12 +16,11 @@ public class Peterrson extends Thread
         synchronise = toSynchronise;
     }
 
-    public Peterrson(int nr, char character, int nRepetions)
+    public Lepport(int nr, char character, int nRepetions)
     {
         znak = character;
         this.nr = nr;
         this.nRepetions = nRepetions;
-        chce[nr] = true;
     }
 
     private void privateJob()
@@ -51,11 +47,11 @@ public class Peterrson extends Thread
 
     private void criticalSection(int numberOfRepetion)
     {
-        System.out.println("Sekcja krytyczna wątku: Pettersona-" + (nr + 1) + ",nr powt.=" + numberOfRepetion);
+        System.out.println("Sekcja krytyczna wątku: Lamport-" + (nr + 1) + ",nr powt.=" + numberOfRepetion);
         wirteSeparator();
     }
 
-    public void unsynchronizedAct()
+    public void dzialanieNiesynchr()
     {
         for (int i = 0; i < nRepetions; i++)
         {
@@ -64,23 +60,25 @@ public class Peterrson extends Thread
         }
     }
 
-    public void synchronizedAct()
+    public void dzialanieSynchr()
     {
         int oppositeNumber = (nr == 0 ? 1 : 0);
 
         for (int i = 0; i < nRepetions; i++)
         {
             privateJob();
-            chce[nr] = true;
-            czyjaKolej=oppositeNumber;
-            while (chce[oppositeNumber] && czyjaKolej == oppositeNumber)
-                ;
+            numerek[nr]=giveMax(numerek)+1;
+            wybieranie[nr]= false;
+            for(int j=0;j<nThreads;j++)
+            {
+                while (wybieranie[j])
+                    ;
+                while (numerek[j] != 0 && numerek[j]<numerek[nr]&&j<nr)
+                    ;
+            }
             criticalSection(i);
-            czyjaKolej = oppositeNumber;
-            chce[nr] = false;
         }
     }
-
 
     @Override
     public void run()
@@ -91,4 +89,12 @@ public class Peterrson extends Thread
             unsynchronizedAct();
     }
 
+    public int giveMax(int[] table)
+    {
+        int max = Integer.MIN_VALUE;
+        for (int w : table)
+            if(w > max)
+                max = w;
+        return max;
+    }
 }
