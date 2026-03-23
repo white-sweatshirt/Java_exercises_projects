@@ -1,6 +1,6 @@
-package Zad3;
-
-public class Lepport extends Thread implements Constans {
+package Zad4;
+import java.
+public class Sem extends Thread implements Constans {
     // Carpe Diem
     // chce to odpowiednik K1 oraz K2 czyli rezerwacji sekcji krytcznej
     private char znak;
@@ -14,7 +14,7 @@ public class Lepport extends Thread implements Constans {
         synchronise = toSynchronise;
     }
 
-    public Lepport(int nr, char character, int nRepetions) {
+    public Sem(int nr, char character, int nRepetions) {
         znak = character;
         this.nr = nr;
         this.nRepetions = nRepetions;
