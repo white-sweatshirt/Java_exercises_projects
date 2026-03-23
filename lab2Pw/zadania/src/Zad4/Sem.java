@@ -1,5 +1,4 @@
 package Zad4;
-import java.
 public class Sem extends Thread implements Constans {
     // Carpe Diem
     // chce to odpowiednik K1 oraz K2 czyli rezerwacji sekcji krytcznej
