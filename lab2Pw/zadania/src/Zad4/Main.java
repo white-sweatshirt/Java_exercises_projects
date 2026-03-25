@@ -8,11 +8,13 @@ public class Main implements Constans {
 
     public static void main() {
         Scanner input = new Scanner(System.in);
-        Sem[] threads = new Sem[N_THREADS];
-        System.out.println("0. synchronizacja semafor , \n 1. synchronizacja lock \n inne- synchronizacja metoda synchronizowana: ");
+        SyncClass[] threads = new SyncClass[N_THREADS];
+        System.out.println("0. synchronizacja semafor , \n 1. synchronizacja lock");
+        System.out.println("inne- synchronizacja metoda synchronizowana: ");
+
         byte a = input.nextByte();
         for (int i = 0; i < N_THREADS; i++)
-            threads[i] = new Sem(i, '*', 100);
+            threads[i] = new SyncClass(i, 100);
         for (int i = 0; i < N_THREADS; i++)
             threads[i].setMode(a);
 

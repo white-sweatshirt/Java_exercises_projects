@@ -7,7 +7,13 @@ public class DeckerClass extends Thread
     // chce to odpowiednik K1 oraz K2 czyli rezerwacji sekcji krytcznej
     static volatile boolean[] chce = new boolean[2];
     static volatile int czyjaKolej = 0;
-    private char znak;
+    private static char []znaki =new char[2];
+    static
+    {
+        znaki[0]='+';
+        znaki[1]='-';
+    }
+
 
 
     private int nr = 0;
@@ -19,9 +25,9 @@ public class DeckerClass extends Thread
         synchronise = toSynchronise;
     }
 
-    public DeckerClass(int nr, char character, int nRepetions)
+    public DeckerClass(int nr,  int nRepetions)
     {
-        znak = character;
+
         this.nr = nr;
         this.nRepetions = nRepetions;
         chce[nr] = true;
@@ -45,7 +51,7 @@ public class DeckerClass extends Thread
     private void wirteSeparator()
     {
         for (int i = 0; i < TIMES_TO_WRITE; i++)
-            System.out.print(znak);
+            System.out.print(znaki[nr]);
         System.out.print("\n");
     }
 

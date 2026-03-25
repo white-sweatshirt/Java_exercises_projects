@@ -3,7 +3,16 @@ package Zad3;
 public class Lepport extends Thread implements Constans {
     // Carpe Diem
     // chce to odpowiednik K1 oraz K2 czyli rezerwacji sekcji krytcznej
-    private char znak;
+    private static char[] znaki = new char[N_THREADS];
+
+    static {
+        znaki[0] = '+';
+        znaki[1] = '-';
+        znaki[2] = '*';
+        znaki[3] = '~';
+        znaki[4] = '^';
+    }
+
     static volatile boolean[] wybieranie = new boolean[N_THREADS];
     static volatile int[] numerek = new int[N_THREADS];
     private int nr = 0;
@@ -14,8 +23,7 @@ public class Lepport extends Thread implements Constans {
         synchronise = toSynchronise;
     }
 
-    public Lepport(int nr, char character, int nRepetions) {
-        znak = character;
+    public Lepport(int nr, int nRepetions) {
         this.nr = nr;
         this.nRepetions = nRepetions;
     }
@@ -34,12 +42,12 @@ public class Lepport extends Thread implements Constans {
 
     private void wirteSeparator() {
         for (int i = 0; i < TIMES_TO_WRITE; i++)
-            System.out.print(znak);
+            System.out.print(znaki[nr]);
         System.out.print("\n");
     }
 
     private void criticalSection(int numberOfRepetion) {
-        System.out.println("Sekcja krytyczna wątku: Lamport-" + (nr + 1) + ",nr powt.=" + numberOfRepetion);
+        System.out.println("Sekcja krytyczna wątku: Lamport-" + (nr + 1) + ",nr powt.=" + (numberOfRepetion + 1));
         wirteSeparator();
     }
 
@@ -54,12 +62,12 @@ public class Lepport extends Thread implements Constans {
         for (int i = 0; i < nRepetions; i++) {
             privateJob();
             wybieranie[nr] = true;// wymusznie jednoznacznosici numerkow
-            numerek[nr] = giveMax(numerek) + 1 == Integer.MAX_VALUE ? 0 : giveMax(numerek) + 1;
+            numerek[nr] = giveMax(numerek) + 1;
             wybieranie[nr] = false;
             for (int j = 0; j < N_THREADS; j++) {
                 while (wybieranie[j])
                     ;
-                while (numerek[j] != 0 && numerek[j] < numerek[nr])
+                while (numerek[j] != 0 && (numerek[j] < numerek[nr] || (numerek[j] == numerek[nr] && j < nr)))
                     ;
             }
             criticalSection(i);

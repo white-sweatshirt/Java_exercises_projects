@@ -4,8 +4,7 @@ import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Sem extends Thread implements Constans {
-    // Carpe Diem
+public class SyncClass extends Thread implements Constans {
     // chce to odpowiednik K1 oraz K2 czyli rezerwacji sekcji krytcznej
     private char znak;
     private static Semaphore sem = new Semaphore(1);
@@ -13,20 +12,22 @@ public class Sem extends Thread implements Constans {
     static byte mode;
     private int nRepetions;
     private Random a = new Random();
-    private static char[] znaki = new char[3];
+    private static char[] znaki = new char[N_THREADS];
+    private static Object object = new Object();
 
     static {
         znaki[0] = '+';
         znaki[1] = '-';
         znaki[2] = '*';
+        znaki[3] = '~';
+        znaki[4] = '^';
     }
 
     public void setMode(byte newMode) {
         mode = newMode;
     }
 
-    public Sem(int nr, char character, int nRepetions) {
-        znak = character;
+    public SyncClass(int nr, int nRepetions) {
         this.nr = nr;
         this.nRepetions = nRepetions;
     }
@@ -48,8 +49,8 @@ public class Sem extends Thread implements Constans {
         System.out.print("\n");
     }
 
-    private synchronized void  criticalSection(int numberOfRepetion) {
-        System.out.println("Sekcja krytyczna wątku: Sem-" + (nr + 1) + ",nr powt.=" + numberOfRepetion);
+    private void criticalSection(int numberOfRepetion) {
+        System.out.println("Sekcja krytyczna wątku: SemThread-" + (nr + 1) + ",nr powt.=" + (numberOfRepetion + 1));
         wirteSeparator();
     }
 
@@ -70,10 +71,12 @@ public class Sem extends Thread implements Constans {
         }
     }
 
-    public synchronized void dzialanieMetSynchr() {
+    public void dzialanieMetSynchr() {
         for (int i = 0; i < nRepetions; i++) {
             privateJob();
-            criticalSection(i);
+            synchronized (object) {
+                criticalSection(i);
+            }
         }
     }
 

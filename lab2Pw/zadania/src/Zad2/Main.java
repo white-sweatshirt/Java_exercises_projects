@@ -7,8 +7,8 @@ public class Main
     public static void main()
     {
         Scanner input = new Scanner(System.in);
-        Peterrson first = new Peterrson(0, '+', 100);
-        Peterrson secund = new Peterrson(1, '-', 100);
+        Peterrson first = new Peterrson(0, 100);
+        Peterrson secund = new Peterrson(1, 100);
         System.out.println("czy chcesz synchronizacje \n 1- tak co innego -nie: ");
         byte a = input.nextByte();
         if(a == 1)

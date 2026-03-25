@@ -5,7 +5,8 @@ import java.util.concurrent.*;
 public class AccountWithoutSync {
     static Account account = new Account();
 
-
+    // carpe diem
+    // Carpe Diem
     public static void main() {
         // creating pool of threads to be used by program
         // it helps on small asychronise tasks
@@ -36,7 +37,7 @@ public class AccountWithoutSync {
             return balance;
         }
 
-        public void deposit(int amount) {
+        public synchronized void deposit(int amount) {
             int newBalance = balance + Math.max(amount, 0);
             try {
                 Thread.sleep(10);

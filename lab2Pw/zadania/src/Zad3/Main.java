@@ -2,7 +2,6 @@
 package Zad3;
 
 
-
 import java.util.Scanner;
 
 public class Main implements Constans {
@@ -14,7 +13,7 @@ public class Main implements Constans {
         System.out.println("czy chcesz synchronizacje \n 1- tak co innego -nie: ");
         byte a = input.nextByte();
         for (int i = 0; i < N_THREADS; i++)
-            threads[i] = new Lepport(i, '*', 100);
+            threads[i] = new Lepport(i, 100);
         if (a == 1)
             for (int i = 0; i < N_THREADS; i++)
                 threads[i].setSynchronise(true);
