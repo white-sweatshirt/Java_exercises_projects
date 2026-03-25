@@ -22,7 +22,6 @@ public class Peterrson extends Thread {
     }
 
     public Peterrson(int nr, int nRepetions) {
-
         this.nr = nr;
         this.nRepetions = nRepetions;
         chce[nr] = true;
@@ -47,7 +46,7 @@ public class Peterrson extends Thread {
     }
 
     private void criticalSection(int numberOfRepetion) {
-        System.out.println("Sekcja krytyczna wątku: Pettersona-" + (nr + 1) + ",nr powt.=" + numberOfRepetion);
+        System.out.println("Sekcja krytyczna wątku: Pettersona-" + (nr + 1) + ",nr powt.=" + (numberOfRepetion + 1));
         wirteSeparator();
     }
 

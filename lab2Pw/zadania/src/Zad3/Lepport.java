@@ -65,10 +65,8 @@ public class Lepport extends Thread implements Constans {
             numerek[nr] = giveMax(numerek) + 1;
             wybieranie[nr] = false;
             for (int j = 0; j < N_THREADS; j++) {
-                while (wybieranie[j])
-                    ;
-                while (numerek[j] != 0 && (numerek[j] < numerek[nr] || (numerek[j] == numerek[nr] && j < nr)))
-                    ;
+                while (wybieranie[j]) ;
+                while (numerek[j] != 0 && (numerek[j] < numerek[nr] || (numerek[j] == numerek[nr] && j < nr))) ;
             }
             criticalSection(i);
             numerek[nr] = 0;
@@ -77,17 +75,14 @@ public class Lepport extends Thread implements Constans {
 
     @Override
     public void run() {
-        if (synchronise)
-            dzialanieSynchr();
-        else
-            dzialanieNiesynchr();
+        if (synchronise) dzialanieSynchr();
+        else dzialanieNiesynchr();
     }
 
     public int giveMax(int[] table) {
         int max = Integer.MIN_VALUE;
         for (int w : table)
-            if (w > max)
-                max = w;
+            if (w > max) max = w;
         return max;
     }
 }
