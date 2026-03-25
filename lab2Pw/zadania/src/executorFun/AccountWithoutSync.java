@@ -7,7 +7,10 @@ public class AccountWithoutSync {
 
 
     public static void main() {
+        // creating pool of threads to be used by program
+        // it helps on small asychronise tasks
         ExecutorService executor = Executors.newCachedThreadPool();
+
         for (int i = 0; i < 100; i++)
             executor.execute(new AddPennyTask());
         executor.shutdown();
@@ -20,7 +23,9 @@ public class AccountWithoutSync {
     static private class AddPennyTask implements Runnable {
         @Override
         public void run() {
-            account.deposit(1);
+            synchronized (account) {
+                account.deposit(1);
+            }
         }
     }
 
