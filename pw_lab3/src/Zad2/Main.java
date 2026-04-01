@@ -1,8 +1,5 @@
 package Zad2;
 
-import java.util.Random;
-import java.util.concurrent.Semaphore;
-
 public class Main {
 
     // ===== MAIN =====

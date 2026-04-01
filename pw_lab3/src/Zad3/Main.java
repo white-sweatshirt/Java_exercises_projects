@@ -5,7 +5,7 @@ public class Main {
     // ===== MAIN =====
     public static void main(String[] args) throws InterruptedException {
 
-        int m = 4, n = 2;
+        int m = 5, n = 2;
         int a = 5, b = 15, c = 1, d = 5;
 
         CzytelniaMonitor monitor = new CzytelniaMonitor();

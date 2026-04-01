@@ -13,15 +13,17 @@ public class CzytelniaMonitor {
     private final Semaphore czytelnik = new Semaphore(1);
     private final Semaphore pisarze = new Semaphore(1);
     private final Semaphore chron = new Semaphore(1);
-
+    private final Semaphore pojemnosc =new Semaphore(3);
     // ===== CZYTELNIK =====
     public void wejdzCzytelnik(int id, int powt) {
         try {
             if (liczPis.get() + liczPis.get() > 0) {
                 liczCzytPocz.incrementAndGet();
                 czytelnik.acquire();
+
                 liczCzytPocz.decrementAndGet();
             }
+            pojemnosc.acquire();
             liczCzyt.incrementAndGet();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -32,6 +34,7 @@ public class CzytelniaMonitor {
 
     public void wyjdzCzytelnik(int id, int powt) {
         liczCzyt.decrementAndGet();
+        pojemnosc.release();
         log("<<<", "C-" + id, powt);
         if (liczCzyt.get() == 0) pisarze.release();
     }
