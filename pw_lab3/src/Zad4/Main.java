@@ -12,7 +12,7 @@ public class Main {
             filozofowie[i].start();
         }
 
-        Thread.sleep(10000);
+        Thread.sleep(5000);
 
         for (Filozof f : filozofowie) f.interrupt();
         for (Filozof f : filozofowie) f.join();
