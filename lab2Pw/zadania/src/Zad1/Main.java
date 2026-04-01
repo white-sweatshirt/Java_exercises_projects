@@ -1,5 +1,3 @@
-//Carpe Diem
-
 package Zad1;
 
 import java.util.Scanner;
