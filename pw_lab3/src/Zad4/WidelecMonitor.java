@@ -3,10 +3,6 @@ package Zad4;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.*;
 
-
-
-import java.util.concurrent.Semaphore;
-
 public class WidelecMonitor {
 
     private final int N = 5;
@@ -49,8 +45,6 @@ public class WidelecMonitor {
         try {
             System.out.print(prefix + "[" + id + "," + rep + "] :: licz_fil_przy_stole=");
 
-            // jeśli chcesz liczyć filozofów przy stole, trzymaj osobny licznik
-            // tutaj tylko pokaz przykładowy:
             System.out.print(" ? ");
 
             System.out.print(" [");
