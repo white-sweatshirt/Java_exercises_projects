@@ -1,27 +1,32 @@
 package zad5;
 
+import java.lang.foreign.UnionLayout;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public class MyThread implements Callable<Integer> {
-    final Object lock;
-    int nr = 0;
+public class MyThread implements Runnable {
+    private final Barrier barrier;
+    private final int id;
+    private final Random rand = new Random();
 
-    MyThread(Object lock, int nr) {
-        this.lock = lock;
+    public MyThread(Barrier barrier, int id) {
+        this.barrier = barrier;
+        this.id = id;
     }
 
     @Override
-    public Integer call() {
-        int result = 0;
+    public void run() {
         try {
-            TimeUnit.SECONDS.sleep((int) (Math.random() * 5 + 1));
-            result = (int) (Math.random() * 10 + 1);
-            System.out.println(Thread.currentThread().getName() + ":" + result);
+            System.out.println("Wątek " + id + " start");
+            int sleepTime = 2 + rand.nextInt(3);
+            TimeUnit.SECONDS.sleep(sleepTime);
+            System.out.println("Wątek " + id + " przed barierą");
+            barrier.barrier();
+            System.out.println("Wątek " + id + " po barierze - koniec");
+
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            e.printStackTrace();
         }
-        Integer a = new Integer(result);
-        return a;
     }
 }
