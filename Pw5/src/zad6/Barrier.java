@@ -1,4 +1,4 @@
-package zad5;
+package zad6;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -7,32 +7,40 @@ public class Barrier {
 
     ReentrantLock lock = new ReentrantLock();
     Condition allHited = lock.newCondition();
-    Runnable action;
     boolean wasRunned = false;
     int nrWatki = 5;
 
-    public Barrier(Runnable action) {
-        this.action = action;
+    public Barrier(Runnable action, int nrWatki) {
+        this.nrWatki = nrWatki;
     }
 
     public void barrier() {
         lock.lock();
-
         try {
-            if (--nrWatki > 0) {
+            while (nrWatki > 0) {
                 allHited.await();
             }
-            if (!wasRunned) {
-                action.run();
-                wasRunned = true;
+        } catch (InterruptedException e) {
+           return;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void countDown() {
+        lock.lock();
+        try {
+            while (--nrWatki > 0) {
+                allHited.await();
             }
             allHited.signalAll();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        } finally {
+        }
+        finally {
             lock.unlock();
         }
 
-
     }
+
 }
