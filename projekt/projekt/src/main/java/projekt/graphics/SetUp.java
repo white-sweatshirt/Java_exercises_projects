@@ -7,12 +7,15 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import projekt.PoolsEnumaration;
+
 
 public final class SetUp
 {
     final static double lineStartY = 0;
 
     final static double lineEndY = 100;
+
 
     private static void addCashier()
     {
@@ -48,9 +51,10 @@ public final class SetUp
         desk.setFill(Color.BROWN);
         desk.setStroke(Color.BLACK);
         basicPane.getChildren().add(desk);
+
     }
 
-    public static void addPoolsRepresentations(Pane root)
+    public static Pane[] addPoolsRepresentations(Pane root)
     {
         Pane regularPoolPane = new Pane();
         Pane olympicPoolPane = new Pane();
@@ -100,13 +104,19 @@ public final class SetUp
         childPoolPane.getChildren().add(childWater);
 
         root.getChildren().addAll(regularPoolPane, olympicPoolPane, childPoolPane);
+        Pane[] tab = new Pane[3];
+        tab[PoolsEnumaration.regular.ordinal()] = regularPoolPane;
+        tab[PoolsEnumaration.olympic.ordinal()] = olympicPoolPane;
+        tab[PoolsEnumaration.children.ordinal()] = childPoolPane;
+        return tab;
     }
 
-    public static void produceBackground(Pane basicPane)
+    public static Pane[] produceBackground(Pane basicPane)
     {
         addLines(basicPane);
         addDesk(basicPane);
-        addPoolsRepresentations(basicPane);
+        return addPoolsRepresentations(basicPane);
+
     }
 
 }
