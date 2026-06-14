@@ -1,33 +1,34 @@
 package projekt.graphics;
 
-import javafx.scene.Scene;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.DoubleProperty;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import projekt.PoolsEnumaration;
+import projekt.PoolsEnumeration;
+import projekt.pool.Pool;
 
 
-public final class SetUp
-{
+public final class SetUp {
     final static double lineStartY = 0;
 
     final static double lineEndY = 100;
 
-
-    private static void addCashier()
-    {
+    private static void addCashier(DoubleProperty Xstart, DoubleBinding Ystart, DoubleProperty radius, Pane pane) {
         // this proves person at work  is not ...
         Circle cashier = new Circle();
         cashier.setFill(Color.CORAL);
         cashier.setStroke(Color.CORAL);
-
+        cashier.radiusProperty().bind(radius);
+        cashier.setCenterX(Xstart.doubleValue());
+        cashier.setCenterY(Ystart.doubleValue());
+        pane.getChildren().add(cashier);
     }
 
-    private static void addLines(Pane basicPane)
-    {
+    private static void addLines(Pane basicPane) {
         Line a = new Line(100, lineStartY, 100, lineEndY);
         a.startXProperty().bind(basicPane.widthProperty().multiply(0.1));
         a.endXProperty().bind(basicPane.widthProperty().multiply(0.1));
@@ -41,8 +42,7 @@ public final class SetUp
         basicPane.getChildren().addAll(a, b);
     }
 
-    public static void addDesk(Pane basicPane)
-    {
+    public static void addVisualRepresentionOfQue(Pane basicPane) {
         Rectangle desk = new Rectangle();
         desk.xProperty().bind(basicPane.widthProperty().multiply(0.09));
         desk.yProperty().bind(basicPane.heightProperty().multiply(0.5).add(100));
@@ -50,73 +50,32 @@ public final class SetUp
         desk.heightProperty().bind(basicPane.heightProperty().multiply(0.1));
         desk.setFill(Color.BROWN);
         desk.setStroke(Color.BLACK);
-        basicPane.getChildren().add(desk);
-
+        basicPane.getChildren().add(desk);;
+        addCashier(desk.xProperty(),desk.yProperty().multiply(2),desk.heightProperty(),basicPane);
     }
 
-    public static Pane[] addPoolsRepresentations(Pane root)
-    {
-        Pane regularPoolPane = new Pane();
-        Pane olympicPoolPane = new Pane();
-        Pane childPoolPane = new Pane();
+    public static Pool[] producePoolsRepresentations(Pane root) {
+        Pool olympicPool = new Pool(root,  root.widthProperty().multiply(0.45),
+                root.heightProperty().multiply(0.45),root.widthProperty().multiply(0.40),
+                root.heightProperty().multiply(0.18));
 
-        Rectangle regularWater = new Rectangle();
-        Rectangle olympicWater = new Rectangle();
-        Circle childWater = new Circle();
+        Pool regularPool = new Pool(root, root.widthProperty().multiply(0.40),
+                root.heightProperty().multiply(0.08), root.widthProperty().multiply(0.50),
+                root.heightProperty().multiply(0.28));
 
-        regularWater.setFill(Color.LIGHTBLUE);
-        olympicWater.setFill(Color.LIGHTBLUE);
-        childWater.setFill(Color.LIGHTBLUE);
+        Pool childPool = new Pool(root,  root.widthProperty().multiply(0.60),
+                root.heightProperty().multiply(0.72), root.widthProperty().multiply(0.25),
+                root.heightProperty().multiply(0.15));
 
-        regularWater.setStroke(Color.BLACK);
-        olympicWater.setStroke(Color.BLACK);
-        childWater.setStroke(Color.BLACK);
-
-
-        regularPoolPane.layoutXProperty().bind(root.widthProperty().multiply(0.40));
-        regularPoolPane.layoutYProperty().bind(root.heightProperty().multiply(0.08));
-        regularPoolPane.prefWidthProperty().bind(root.widthProperty().multiply(0.50));
-        regularPoolPane.prefHeightProperty().bind(root.heightProperty().multiply(0.28));
-
-        regularWater.widthProperty().bind(regularPoolPane.prefWidthProperty());
-        regularWater.heightProperty().bind(regularPoolPane.prefHeightProperty());
-
-        olympicPoolPane.layoutXProperty().bind(root.widthProperty().multiply(0.8));
-        olympicPoolPane.layoutYProperty().bind(root.heightProperty().multiply(0.45));
-        olympicPoolPane.prefWidthProperty().bind(root.widthProperty().multiply(0.40));
-        olympicPoolPane.prefHeightProperty().bind(root.heightProperty().multiply(0.18));
-
-        olympicWater.widthProperty().bind(olympicPoolPane.prefWidthProperty());
-        olympicWater.heightProperty().bind(olympicPoolPane.prefHeightProperty());
-
-        childPoolPane.layoutXProperty().bind(root.widthProperty().multiply(0.65));
-        childPoolPane.layoutYProperty().bind(root.heightProperty().multiply(0.72));
-        childPoolPane.prefWidthProperty().bind(root.widthProperty().multiply(0.20));
-        childPoolPane.prefHeightProperty().bind(root.widthProperty().multiply(0.20));
-
-        childWater.centerXProperty().bind(childPoolPane.prefWidthProperty().divide(2));
-        childWater.centerYProperty().bind(childPoolPane.prefHeightProperty().divide(2));
-        childWater.radiusProperty().bind(childPoolPane.prefWidthProperty().divide(2));
-
-        // Add water shapes as background layer
-        regularPoolPane.getChildren().add(regularWater);
-        olympicPoolPane.getChildren().add(olympicWater);
-        childPoolPane.getChildren().add(childWater);
-
-        root.getChildren().addAll(regularPoolPane, olympicPoolPane, childPoolPane);
-        Pane[] tab = new Pane[3];
-        tab[PoolsEnumaration.regular.ordinal()] = regularPoolPane;
-        tab[PoolsEnumaration.olympic.ordinal()] = olympicPoolPane;
-        tab[PoolsEnumaration.children.ordinal()] = childPoolPane;
+        Pool[] tab = new Pool[3];
+        tab[PoolsEnumeration.regular.ordinal()] = regularPool;
+        tab[PoolsEnumeration.olympic.ordinal()] = olympicPool;
+        tab[PoolsEnumeration.children.ordinal()] = childPool;
         return tab;
     }
 
-    public static Pane[] produceBackground(Pane basicPane)
-    {
+    public static void produceBackground(Pane basicPane) {
         addLines(basicPane);
-        addDesk(basicPane);
-        return addPoolsRepresentations(basicPane);
-
+        addVisualRepresentionOfQue(basicPane);
     }
-
 }

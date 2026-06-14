@@ -1,6 +1,6 @@
 package projekt;
 
-public enum PoolsEnumaration
+public enum PoolsEnumeration
 {
 
         regular,olympic,children

@@ -1,7 +1,8 @@
 package projekt.Consumer;
 
-public class VIPClient extends Client
+public class regularCustomer extends Client
 {
+    @Override
     public void run()
     {
 

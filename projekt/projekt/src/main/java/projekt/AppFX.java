@@ -6,6 +6,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import projekt.graphics.SetUp;
+import projekt.pool.Pool;
 
 public class AppFX extends Application
 {
@@ -26,6 +27,7 @@ public class AppFX extends Application
         supe2.layoutYProperty().bind(pane.heightProperty().divide(2));
         supe2.setPrefWidth(100);
         supe2.setPrefHeight(400);
+        Pool [] pools = SetUp.producePoolsRepresentations(pane);
         SetUp.produceBackground(pane);
         /*EventClass appExpiriance = new EventClass(pane);
         appExpiriance.start();
