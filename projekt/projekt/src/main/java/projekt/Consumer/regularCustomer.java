@@ -3,46 +3,38 @@ package projekt.Consumer;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 import projekt.pool.Pool;
+import projekt.utility.PoolCleaner;
 
 public class regularCustomer extends Client {
 
     public regularCustomer(int timeToSpendMs) {
+        super();
         this.timeItWantsToSpendms = timeToSpendMs;
     }
 
     @Override
     public void run() {
-        // 1. Spawn in the queue visually BEFORE waiting for a pool
         Platform.runLater(() -> {
-            this.circleRepresentation = new Circle(constRadius, Color.BLUE);
+            buildLayoutWrapper(Color.BLUE);
 
-            // Calculate bounds based on your SetUp.addLines logic
-            // X is between 10% and 20% of the pane width
-            // Y is between 0 and 50% of the pane height
-            double minX = mainPane.getWidth() * 0.1;
-            double maxX = mainPane.getWidth() * 0.2;
+            double minX = mainPane.getWidth() * 0.0;
+            double maxX = mainPane.getWidth() * 0.1;
             double maxY = mainPane.getHeight() * 0.5;
 
-            // Keep the circle safely inside the lines by accounting for its radius
-            double safeMinX = minX + constRadius;
-            double safeMaxX = maxX - constRadius;
+            componentLayoutWrapper.setLayoutX((minX + constRadius) + Math.random() * ((maxX - constRadius) - (minX + constRadius)));
+            componentLayoutWrapper.setLayoutY(constRadius + Math.random() * (maxY - constRadius * 2));
 
-            // Randomize position within the queue bounds
-            circleRepresentation.setCenterX(safeMinX + Math.random() * (safeMaxX - safeMinX));
-            circleRepresentation.setCenterY(constRadius + Math.random() * (maxY - constRadius * 2));
-
-            mainPane.getChildren().add(circleRepresentation);
+            mainPane.getChildren().add(componentLayoutWrapper);
         });
 
         Pool chosenPool = null;
 
-        // 2. Wait logically for a spot in a pool
+        // Subclass explicitly evaluates all local condition rules
         queLock.lock();
         try {
-            while (vipsInQue > 0 || (chosenPool = claimFreePool()) == null) {
+            while (PoolCleaner.isCleaningInProgress() || vipsInQue > 0 || (chosenPool = claimFreePool()) == null) {
                 normalPersonCanPass.await();
             }
         } catch (InterruptedException e) {
@@ -54,16 +46,11 @@ public class regularCustomer extends Client {
 
         final Pool targetPool = chosenPool;
 
-        // 3. Move from the queue to the pool visually
         Platform.runLater(() -> {
-            // Remove from the main queue pane
-            mainPane.getChildren().remove(circleRepresentation);
-
-            // Add to the specific pool pane
+            mainPane.getChildren().remove(componentLayoutWrapper);
             goToChosenPool(targetPool.assginedPanel);
 
-            // Play shrinking animation
-            ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), circleRepresentation);
+            ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), componentLayoutWrapper);
             shrink.setToX(0.0);
             shrink.setToY(0.0);
             shrink.play();

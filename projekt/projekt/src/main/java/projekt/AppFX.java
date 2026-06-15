@@ -7,6 +7,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import projekt.Consumer.VIPClient;
 import projekt.utility.Cashier;
+import projekt.utility.PoolCleaner;
 import projekt.utility.SetUp;
 import projekt.pool.Pool;
 import projekt.Consumer.Client;
@@ -14,7 +15,8 @@ import projekt.Consumer.regularCustomer;
 import projekt.Consumer.ClientWithChild; // Import the new class
 
 public class AppFX extends Application {
-    final  int timeInPoolsMs = 5000;
+    final int timeInPoolsMs = 5000;
+
     @Override
     public void start(Stage stage) {
 
@@ -37,6 +39,9 @@ public class AppFX extends Application {
             }
             cashier.start();
             try {
+                PoolCleaner cleanerTask = new PoolCleaner();
+                Thread cleanerThread = new Thread(cleanerTask);
+                cleanerThread.start(); // Spawns the independent monitoring runtime
                 for (int i = 0; i < 100; i++) {
                     Thread.sleep(100);
                     Client customer;

@@ -1,55 +1,63 @@
 package projekt.Consumer;
 
-import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
-
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.util.Duration;
 import projekt.pool.Pool;
+import projekt.utility.PoolCleaner;
 
 public class ClientWithChild extends Client {
 
     private Rectangle childRepresentation;
     private final double childSize = 10.0;
-    private HBox familyGroup; // Container to hold parent and child together in the FlowPane
+    private HBox familyGroup;
 
     public ClientWithChild(int timeToSpendMs) {
+        super();
         this.timeItWantsToSpendms = timeToSpendMs;
     }
 
     @Override
     public void run() {
         Platform.runLater(() -> {
-            this.circleRepresentation = new Circle(constRadius, Color.DARKGREEN);
+            buildLayoutWrapper(Color.DARKGREEN);
+
             double minX = mainPane.getWidth() * 0.0;
             double maxX = mainPane.getWidth() * 0.1;
             double maxY = mainPane.getHeight() * 0.5;
-            double safeMinX = minX + constRadius;
-            double safeMaxX = maxX - constRadius;
-            double spawnX = safeMinX + Math.random() * (safeMaxX - safeMinX);
+
+            double spawnX = (minX + constRadius) + Math.random() * ((maxX - constRadius) - (minX + constRadius));
             double spawnY = constRadius + Math.random() * (maxY - constRadius * 2);
 
-            circleRepresentation.setCenterX(spawnX);
-            circleRepresentation.setCenterY(spawnY);
+            componentLayoutWrapper.setLayoutX(spawnX);
+            componentLayoutWrapper.setLayoutY(spawnY);
 
             this.childRepresentation = new Rectangle(childSize, childSize, Color.LIGHTGREEN);
-            childRepresentation.setX(spawnX + constRadius);
-            childRepresentation.setY(spawnY - (childSize / 2));
+            VBox childBox = new VBox(2);
+            childBox.setAlignment(Pos.CENTER);
+            Text childText = new Text("Ch");
+            childText.setStyle("-fx-font-size: 8px;");
+            childBox.getChildren().addAll(childRepresentation, childText);
 
-            mainPane.getChildren().addAll(circleRepresentation, childRepresentation);
+            familyGroup = new HBox(4);
+            familyGroup.getChildren().addAll(componentLayoutWrapper, childBox);
+            familyGroup.setLayoutX(spawnX);
+            familyGroup.setLayoutY(spawnY);
+
+            mainPane.getChildren().add(familyGroup);
         });
 
         Pool chosenPool = null;
 
-        // 2. Wait logically for a spot
         queLock.lock();
         try {
-            while (vipsInQue > 0 || (chosenPool = claimFreePool()) == null) {
+            while (PoolCleaner.isCleaningInProgress() || vipsInQue > 0 || (chosenPool = claimFreePool()) == null) {
                 normalPersonCanPass.await();
             }
         } catch (InterruptedException e) {
@@ -61,34 +69,18 @@ public class ClientWithChild extends Client {
 
         final Pool targetPool = chosenPool;
 
-        // 3. Move to FlowPane layout safely wrapped in an HBox
         Platform.runLater(() -> {
-            mainPane.getChildren().removeAll(circleRepresentation, childRepresentation);
+            mainPane.getChildren().remove(familyGroup);
 
-            // Create a small combined container for the parent and child
-            familyGroup = new HBox(4); // 4px spacing between them
-            familyGroup.setAlignment(Pos.CENTER_LEFT);
-
-            // Put shapes in the family container
-            familyGroup.getChildren().addAll(circleRepresentation, childRepresentation);
-
-            // Append the group to the pool's FlowPane
+            // Re-wrap cleanly for the target pool FlowPane layer
             targetPool.assginedPanel.getChildren().add(familyGroup);
 
-            // Scale transitions work perfectly on the inner elements
-            ScaleTransition shrinkParent = new ScaleTransition(Duration.millis(timeItWantsToSpendms), circleRepresentation);
-            shrinkParent.setToX(0.0);
-            shrinkParent.setToY(0.0);
-
-            ScaleTransition shrinkChild = new ScaleTransition(Duration.millis(timeItWantsToSpendms), childRepresentation);
-            shrinkChild.setToX(0.0);
-            shrinkChild.setToY(0.0);
-
-            ParallelTransition parallelTransition = new ParallelTransition(shrinkParent, shrinkChild);
-            parallelTransition.play();
+            ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), familyGroup);
+            shrink.setToX(0.0);
+            shrink.setToY(0.0);
+            shrink.play();
         });
 
-        // 4. Stay duration
         try {
             Thread.sleep(timeItWantsToSpendms);
         } catch (InterruptedException e) {
@@ -97,7 +89,6 @@ public class ClientWithChild extends Client {
             targetPool.leave(this);
 
             Platform.runLater(() -> {
-                // Simply remove the single container from the pool panel
                 if (familyGroup != null) {
                     targetPool.assginedPanel.getChildren().remove(familyGroup);
                 }
