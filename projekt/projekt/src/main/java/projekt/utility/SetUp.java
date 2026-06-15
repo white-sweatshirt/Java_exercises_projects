@@ -75,6 +75,5 @@ public final class SetUp {
 
     public static void produceBackground(Pane basicPane) {
         addLines(basicPane);
-        addVisualRepresentionOfQue(basicPane);
     }
 }

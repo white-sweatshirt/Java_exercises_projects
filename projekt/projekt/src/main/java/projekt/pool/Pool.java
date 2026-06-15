@@ -1,39 +1,23 @@
 package projekt.pool;
 
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.DoubleProperty;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
-
-public class Pool {
-    // class meant only to mechanicly represent given pool.
-    // it has representation  on graphics it just gives interface for usage of pool.
-    // but after intital creation it wont do anything with it it will serve as a kind of thing to manage
-    // given pool.
-    Pane assginedPanel;
+public class Pool extends Thread {
+    public Pane assginedPanel;
     Rectangle graphicalRepresentation;
-    int maxPeopleInPool;// purly helping just serves to minimize calculations.
-    int currentPeopleInPool;
-    final Object lockForChecking = new Object();
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Condition pullFull = lock.newCondition();
 
-    public boolean sayWheterThereIsPlace() {
-        synchronized (lockForChecking) {
-            return currentPeopleInPool < maxPeopleInPool;
-        }
-    }
+    // Hardcoded max capacity as requested
+    int maxPeopleInPool = 10;
+    int currentPeopleInPool = 0;
+    final Object lockForChecking = new Object();
 
     public Pool(Pane basicPane, DoubleBinding XFromStart,
                 DoubleBinding YFromStart, DoubleBinding widthFromStart, DoubleBinding heightFromStart) {
 
         this.assginedPanel = new Pane();
-        this.maxPeopleInPool = maxPeopleInPool;
         graphicalRepresentation = new Rectangle();
 
         graphicalRepresentation.setFill(Color.LIGHTBLUE);
@@ -50,4 +34,33 @@ public class Pool {
         basicPane.getChildren().add(assginedPanel);
     }
 
+    // Replaces isFree() and enter()
+    public boolean tryEnter() {
+        synchronized (lockForChecking) {
+            if (currentPeopleInPool < maxPeopleInPool) {
+                currentPeopleInPool++; // Claim it immediately while locked
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public void leave() {
+        synchronized (lockForChecking) {
+            currentPeopleInPool--;
+        }
+    }
+
+    @Override
+    public void run() {
+        // As an independent thread, it can monitor its state or run maintenance.
+        // For now, it stays alive until the program terminates.
+        while (!isInterrupted()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                interrupt();
+            }
+        }
+    }
 }
