@@ -11,16 +11,23 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 import projekt.pool.Pool;
 import projekt.utility.PoolCleaner;
+import projekt.utility.SetUp;
 
 public class ClientWithChild extends Client {
 
     private Rectangle childRepresentation;
     private final double childSize = 10.0;
     private HBox familyGroup;
+    private final int childAge;
 
     public ClientWithChild(int timeToSpendMs) {
         super();
         this.timeItWantsToSpendms = timeToSpendMs;
+        this.childAge = 1 + (int) (Math.random() * 12);
+    }
+
+    public int getChildAge() {
+        return this.childAge;
     }
 
     @Override
@@ -28,29 +35,23 @@ public class ClientWithChild extends Client {
         Platform.runLater(() -> {
             buildLayoutWrapper(Color.DARKGREEN);
 
-            double minX = mainPane.getWidth() * 0.0;
-            double maxX = mainPane.getWidth() * 0.1;
-            double maxY = mainPane.getHeight() * 0.5;
-
-            double spawnX = (minX + constRadius) + Math.random() * ((maxX - constRadius) - (minX + constRadius));
-            double spawnY = constRadius + Math.random() * (maxY - constRadius * 2);
-
-            componentLayoutWrapper.setLayoutX(spawnX);
-            componentLayoutWrapper.setLayoutY(spawnY);
-
             this.childRepresentation = new Rectangle(childSize, childSize, Color.LIGHTGREEN);
+
             VBox childBox = new VBox(2);
             childBox.setAlignment(Pos.CENTER);
-            Text childText = new Text("Ch");
-            childText.setStyle("-fx-font-size: 8px;");
+
+            Text childText = new Text("Ch: " + this.childAge);
+            childText.setFill(Color.BLACK);
+            childText.setStyle("-fx-font-size: 8px; -fx-font-weight: bold;");
+
             childBox.getChildren().addAll(childRepresentation, childText);
 
             familyGroup = new HBox(4);
+            familyGroup.setAlignment(Pos.BOTTOM_CENTER);
             familyGroup.getChildren().addAll(componentLayoutWrapper, childBox);
-            familyGroup.setLayoutX(spawnX);
-            familyGroup.setLayoutY(spawnY);
 
-            mainPane.getChildren().add(familyGroup);
+            // Family layout unit enters the shared normal vertical FlowPane line
+            SetUp.normalQueueBox.getChildren().add(familyGroup);
         });
 
         Pool chosenPool = null;
@@ -70,9 +71,7 @@ public class ClientWithChild extends Client {
         final Pool targetPool = chosenPool;
 
         Platform.runLater(() -> {
-            mainPane.getChildren().remove(familyGroup);
-
-            // Re-wrap cleanly for the target pool FlowPane layer
+            SetUp.normalQueueBox.getChildren().remove(familyGroup);
             targetPool.assginedPanel.getChildren().add(familyGroup);
 
             ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), familyGroup);

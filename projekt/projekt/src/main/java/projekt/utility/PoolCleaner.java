@@ -9,13 +9,16 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+
 import java.util.Random;
+
 import projekt.Consumer.Client;
 import projekt.pool.Pool;
 
 public class PoolCleaner implements Runnable {
 
-    private final long TIME_BETWEEN_CLEANINGS = 20000;
+    // INCREASED FREQUENCY: Changed from 20000ms (20s) to 5000ms (5s) for high interaction
+    private final long TIME_BETWEEN_CLEANINGS = 5000;
     private final Random random = new Random();
     private static volatile boolean isCleaningPhase = false;
 
@@ -62,36 +65,23 @@ public class PoolCleaner implements Runnable {
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                // 1. Wait out the idle duration cycle
                 Thread.sleep(TIME_BETWEEN_CLEANINGS);
-
-                // 2. Acquire the synchronization lock to prevent new clients from entering pools
                 Client.queLock.lock();
                 try {
                     isCleaningPhase = true;
-
-                    // Visual feedback: Make the cleaner layout visible and start blinking
                     Platform.runLater(() -> {
                         if (componentLayoutWrapper != null) {
                             componentLayoutWrapper.setVisible(true);
-                            blinkAnimation.play();
                         }
                     });
-
-                    // 3. Wait safely until every single active pool drops to zero occupancy
                     while (!areAllPoolsEmpty()) {
                         Thread.sleep(200);
                     }
-
-                    // 4. Change color to deep red during the heavy scrub phase
                     Platform.runLater(() -> cleanerCircle.setFill(Color.DARKRED));
-
-                    long cleaningDuration = 3000 + random.nextInt(4000);
+                    long cleaningDuration = 4000 + random.nextInt(4000);
                     Thread.sleep(cleaningDuration);
-
                 } finally {
                     isCleaningPhase = false;
-
                     Platform.runLater(() -> {
                         if (componentLayoutWrapper != null) {
                             blinkAnimation.stop();
@@ -104,7 +94,6 @@ public class PoolCleaner implements Runnable {
                     Client.vipCanPass.signalAll();
                     Client.queLock.unlock();
                 }
-
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -114,11 +103,8 @@ public class PoolCleaner implements Runnable {
 
     private boolean areAllPoolsEmpty() {
         if (Client.getAllPools() == null) return true;
-        for (Pool pool : Client.getAllPools()) {
-            if (pool.getCurrentPeopleCount() > 0) {
-                return false;
-            }
-        }
+        for (Pool pool : Client.getAllPools())
+            if (pool.getCurrentPeopleCount() > 0) return false;
         return true;
     }
 }

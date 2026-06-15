@@ -6,6 +6,7 @@ import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import projekt.pool.Pool;
 import projekt.utility.PoolCleaner;
+import projekt.utility.SetUp;
 
 public class regularCustomer extends Client {
 
@@ -18,20 +19,11 @@ public class regularCustomer extends Client {
     public void run() {
         Platform.runLater(() -> {
             buildLayoutWrapper(Color.BLUE);
-
-            double minX = mainPane.getWidth() * 0.0;
-            double maxX = mainPane.getWidth() * 0.1;
-            double maxY = mainPane.getHeight() * 0.5;
-
-            componentLayoutWrapper.setLayoutX((minX + constRadius) + Math.random() * ((maxX - constRadius) - (minX + constRadius)));
-            componentLayoutWrapper.setLayoutY(constRadius + Math.random() * (maxY - constRadius * 2));
-
-            mainPane.getChildren().add(componentLayoutWrapper);
+            SetUp.normalQueueBox.getChildren().add(componentLayoutWrapper);
         });
 
         Pool chosenPool = null;
 
-        // Subclass explicitly evaluates all local condition rules
         queLock.lock();
         try {
             while (PoolCleaner.isCleaningInProgress() || vipsInQue > 0 || (chosenPool = claimFreePool()) == null) {
@@ -47,7 +39,7 @@ public class regularCustomer extends Client {
         final Pool targetPool = chosenPool;
 
         Platform.runLater(() -> {
-            mainPane.getChildren().remove(componentLayoutWrapper);
+            SetUp.normalQueueBox.getChildren().remove(componentLayoutWrapper);
             goToChosenPool(targetPool.assginedPanel);
 
             ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), componentLayoutWrapper);

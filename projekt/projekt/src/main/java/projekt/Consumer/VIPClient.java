@@ -6,6 +6,7 @@ import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import projekt.pool.Pool;
 import projekt.utility.PoolCleaner;
+import projekt.utility.SetUp;
 
 public class VIPClient extends Client {
 
@@ -19,15 +20,7 @@ public class VIPClient extends Client {
         Platform.runLater(() -> {
             buildLayoutWrapper(Color.GOLD);
             circleRepresentation.setStroke(Color.BLACK);
-
-            double minX = mainPane.getWidth() * 0.1;
-            double maxX = mainPane.getWidth() * 0.2;
-            double maxY = mainPane.getHeight() * 0.5;
-
-            componentLayoutWrapper.setLayoutX((minX + constRadius) + Math.random() * ((maxX - constRadius) - (minX + constRadius)));
-            componentLayoutWrapper.setLayoutY(constRadius + Math.random() * (maxY - constRadius * 2));
-
-            mainPane.getChildren().add(componentLayoutWrapper);
+            SetUp.vipQueueBox.getChildren().add(componentLayoutWrapper);
         });
 
         Pool chosenPool = null;
@@ -36,7 +29,6 @@ public class VIPClient extends Client {
         try {
             vipsInQue++;
 
-            // VIP custom condition check strategy
             while (PoolCleaner.isCleaningInProgress() || (chosenPool = claimFreePool()) == null) {
                 vipCanPass.await();
             }
@@ -52,7 +44,7 @@ public class VIPClient extends Client {
         final Pool targetPool = chosenPool;
 
         Platform.runLater(() -> {
-            mainPane.getChildren().remove(componentLayoutWrapper);
+            SetUp.vipQueueBox.getChildren().remove(componentLayoutWrapper);
             goToChosenPool(targetPool.assginedPanel);
 
             ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), componentLayoutWrapper);
