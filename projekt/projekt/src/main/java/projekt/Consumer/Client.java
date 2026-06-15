@@ -53,9 +53,10 @@ public abstract class Client extends Thread {
     }
 
     public void goToChosenPool(Pane poolPane) {
-        // Position clients randomly or sequentially in the UI here if needed
-        circleRepresentation.setCenterX(Math.random() * poolPane.getPrefWidth());
-        circleRepresentation.setCenterY(Math.random() * poolPane.getPrefHeight());
+        double randomXPercentage = 0.10 + (Math.random() * 0.80);
+        double randomYPercentage = 0.10 + (Math.random() * 0.80);
+        circleRepresentation.centerXProperty().bind(poolPane.widthProperty().multiply(randomXPercentage));
+        circleRepresentation.centerYProperty().bind(poolPane.heightProperty().multiply(randomYPercentage));
         poolPane.getChildren().add(circleRepresentation);
     }
 

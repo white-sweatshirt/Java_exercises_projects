@@ -43,7 +43,6 @@ public class AppFX extends Application {
             }
 
             // Start cashier monitoring
-            cashier.setDaemon(true);
             cashier.start();
 
             // Rapidly generate 100 customers

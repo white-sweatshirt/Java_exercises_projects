@@ -24,7 +24,6 @@ public class ClientWithChild extends Client {
         Platform.runLater(() -> {
             this.circleRepresentation = new Circle(constRadius, Color.DARKGREEN);
 
-            // Shifted bounds to the left lane
             double minX = mainPane.getWidth() * 0.0;
             double maxX = mainPane.getWidth() * 0.1;
             double maxY = mainPane.getHeight() * 0.5;
@@ -39,6 +38,7 @@ public class ClientWithChild extends Client {
             circleRepresentation.setCenterY(spawnY);
 
             this.childRepresentation = new Rectangle(childSize, childSize, Color.LIGHTGREEN);
+            // In the queue, they remain static until entry, but let's clear properties clean
             childRepresentation.setX(spawnX + constRadius);
             childRepresentation.setY(spawnY - (childSize / 2));
 
@@ -62,16 +62,20 @@ public class ClientWithChild extends Client {
 
         final Pool targetPool = chosenPool;
 
-        // 3. Move from queue to pool visually
+        // 3. Move from queue to pool visually with dynamic property bindings
         Platform.runLater(() -> {
             mainPane.getChildren().removeAll(circleRepresentation, childRepresentation);
 
+            // Binds circleRepresentation.centerXProperty and centerYProperty dynamically to pool bounds
             goToChosenPool(targetPool.assginedPanel);
 
-            childRepresentation.setX(circleRepresentation.getCenterX() + constRadius);
-            childRepresentation.setY(circleRepresentation.getCenterY() - (childSize / 2));
+            // COMPLIANCE FIX: Dynamically bind the child to move with the parent inside the pool pane
+            childRepresentation.xProperty().bind(circleRepresentation.centerXProperty().add(constRadius));
+            childRepresentation.yProperty().bind(circleRepresentation.centerYProperty().subtract(childSize / 2));
+
             targetPool.assginedPanel.getChildren().add(childRepresentation);
 
+            // Setup parallel transitions
             ScaleTransition shrinkParent = new ScaleTransition(Duration.millis(timeItWantsToSpendms), circleRepresentation);
             shrinkParent.setToX(0.0);
             shrinkParent.setToY(0.0);
@@ -93,6 +97,10 @@ public class ClientWithChild extends Client {
             targetPool.leave();
 
             Platform.runLater(() -> {
+                // Unbind on exit to avoid memory leaks when shapes are disposed
+                childRepresentation.xProperty().unbind();
+                childRepresentation.yProperty().unbind();
+
                 getOut(targetPool.assginedPanel);
                 targetPool.assginedPanel.getChildren().remove(childRepresentation);
             });
