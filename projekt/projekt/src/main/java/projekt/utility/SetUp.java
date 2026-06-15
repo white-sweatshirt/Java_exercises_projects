@@ -6,10 +6,12 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import projekt.PoolsEnumeration;
 import projekt.pool.Pool;
 
@@ -20,6 +22,10 @@ public final class SetUp {
     // --- Vertical FlowPanes to handle top-to-bottom filling with wrapping columns ---
     public static final FlowPane normalQueueBox = new FlowPane(Orientation.VERTICAL);
     public static final FlowPane vipQueueBox = new FlowPane(Orientation.VERTICAL);
+
+    // --- Live Occupancy HUD Display Text Components ---
+    public static final Text normalCountLabel = new Text("Queue: 0 / 44");
+    public static final Text vipCountLabel = new Text("Queue: 0 / 22");
 
     public static Cashier addCashier(DoubleProperty Xstart, DoubleBinding Ystart, DoubleProperty radius, Pane pane) {
         Circle cashier = new Circle();
@@ -36,14 +42,14 @@ public final class SetUp {
 
     private static void addLines(Pane basicPane) {
         Line a = new Line(100, lineStartY, 100, lineEndY);
-        a.startXProperty().bind(basicPane.widthProperty().multiply(0.1));
-        a.endXProperty().bind(basicPane.widthProperty().multiply(0.1));
+        a.startXProperty().bind(basicPane.widthProperty().multiply(0.2));
+        a.endXProperty().bind(basicPane.widthProperty().multiply(0.2));
         a.endYProperty().bind(basicPane.heightProperty().multiply(0.5));
         a.setStroke(Color.BLACK);
 
         Line b = new Line(200, lineStartY, 200, lineEndY);
-        b.startXProperty().bind(basicPane.widthProperty().multiply(0.2));
-        b.endXProperty().bind(basicPane.widthProperty().multiply(0.2));
+        b.startXProperty().bind(basicPane.widthProperty().multiply(0.3));
+        b.endXProperty().bind(basicPane.widthProperty().multiply(0.3));
         b.endYProperty().bind(basicPane.heightProperty().multiply(0.5));
         b.setStroke(Color.BLACK);
 
@@ -52,7 +58,7 @@ public final class SetUp {
 
     public static Cashier createQue(Pane basicPane) {
         Rectangle desk = new Rectangle();
-        desk.xProperty().bind(basicPane.widthProperty().multiply(0.09));
+        desk.xProperty().bind(basicPane.widthProperty().multiply(0.15));
         desk.yProperty().bind(basicPane.heightProperty().multiply(0.5).add(100));
         desk.widthProperty().bind(basicPane.widthProperty().multiply(0.12));
         desk.heightProperty().bind(basicPane.heightProperty().multiply(0.1));
@@ -62,24 +68,43 @@ public final class SetUp {
         basicPane.getChildren().add(desk);
 
         // Configure normal queue space to fill from the top down and wrap into rows
-        normalQueueBox.setVgap(8); // Vertical space between items in a column line
-        normalQueueBox.setHgap(6); // Horizontal space between multiple side-by-side lines
+        normalQueueBox.setVgap(8);
+        normalQueueBox.setHgap(6);
         normalQueueBox.setAlignment(Pos.TOP_CENTER);
         normalQueueBox.layoutXProperty().bind(basicPane.widthProperty().multiply(0.0));
-        normalQueueBox.layoutYProperty().setValue(10); // Start near the very top of screen
-        normalQueueBox.prefWidthProperty().bind(basicPane.widthProperty().multiply(0.1));
-        normalQueueBox.prefHeightProperty().bind(desk.yProperty().subtract(20));
+        normalQueueBox.layoutYProperty().setValue(10);
+        normalQueueBox.prefWidthProperty().bind(basicPane.widthProperty().multiply(0.2));
+        normalQueueBox.prefHeightProperty().bind(desk.yProperty().subtract(40)); // Adjusted height to make room for labels
 
         // Configure VIP queue space identically in its lane
         vipQueueBox.setVgap(8);
         vipQueueBox.setHgap(6);
         vipQueueBox.setAlignment(Pos.TOP_CENTER);
-        vipQueueBox.layoutXProperty().bind(basicPane.widthProperty().multiply(0.1));
+        vipQueueBox.layoutXProperty().bind(basicPane.widthProperty().multiply(0.2));
         vipQueueBox.layoutYProperty().setValue(10);
         vipQueueBox.prefWidthProperty().bind(basicPane.widthProperty().multiply(0.1));
-        vipQueueBox.prefHeightProperty().bind(desk.yProperty().subtract(20));
+        vipQueueBox.prefHeightProperty().bind(desk.yProperty().subtract(40));
 
-        basicPane.getChildren().addAll(normalQueueBox, vipQueueBox);
+        // Create small wrapper boxes to anchor labels cleanly right at the bottom base of the queues
+        VBox normalLabelContainer = new VBox();
+        normalLabelContainer.setAlignment(Pos.CENTER);
+        normalLabelContainer.layoutXProperty().bind(basicPane.widthProperty().multiply(0.0));
+        normalLabelContainer.layoutYProperty().bind(desk.yProperty().subtract(30));
+        normalLabelContainer.prefWidthProperty().bind(basicPane.widthProperty().multiply(0.2));
+        normalCountLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: bold;");
+        normalCountLabel.setFill(Color.DARKBLUE);
+        normalLabelContainer.getChildren().add(normalCountLabel);
+
+        VBox vipLabelContainer = new VBox();
+        vipLabelContainer.setAlignment(Pos.CENTER);
+        vipLabelContainer.layoutXProperty().bind(basicPane.widthProperty().multiply(0.2));
+        vipLabelContainer.layoutYProperty().bind(desk.yProperty().subtract(30));
+        vipLabelContainer.prefWidthProperty().bind(basicPane.widthProperty().multiply(0.1));
+        vipCountLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: bold;");
+        vipCountLabel.setFill(Color.CHOCOLATE);
+        vipLabelContainer.getChildren().add(vipCountLabel);
+
+        basicPane.getChildren().addAll(normalQueueBox, vipQueueBox, normalLabelContainer, vipLabelContainer);
 
         DoubleProperty xCenterProp = new javafx.beans.property.SimpleDoubleProperty();
         xCenterProp.bind(desk.xProperty().add(desk.widthProperty().divide(2)));

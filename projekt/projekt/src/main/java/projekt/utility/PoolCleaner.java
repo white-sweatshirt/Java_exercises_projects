@@ -78,7 +78,7 @@ public class PoolCleaner implements Runnable {
                         Thread.sleep(200);
                     }
                     Platform.runLater(() -> cleanerCircle.setFill(Color.DARKRED));
-                    long cleaningDuration = 4000 + random.nextInt(4000);
+                    long cleaningDuration = 4000;
                     Thread.sleep(cleaningDuration);
                 } finally {
                     isCleaningPhase = false;
