@@ -49,22 +49,17 @@ public final class SetUp {
         desk.heightProperty().bind(basicPane.heightProperty().multiply(0.1));
         desk.setFill(Color.BROWN);
         desk.setStroke(Color.BLACK);
-        basicPane.getChildren().add(desk);;
-        addCashier(desk.xProperty(),desk.yProperty().multiply(2),desk.heightProperty(),basicPane);
+        basicPane.getChildren().add(desk);
+        ;
+        addCashier(desk.xProperty(), desk.yProperty().multiply(2), desk.heightProperty(), basicPane);
     }
 
     public static Pool[] producePoolsRepresentations(Pane root) {
-        Pool olympicPool = new Pool(root,  root.widthProperty().multiply(0.45),
-                root.heightProperty().multiply(0.45),root.widthProperty().multiply(0.40),
-                root.heightProperty().multiply(0.18));
+        Pool olympicPool = new Pool(root, root.widthProperty().multiply(0.45), root.heightProperty().multiply(0.45), root.widthProperty().multiply(0.40), root.heightProperty().multiply(0.18));
 
-        Pool regularPool = new Pool(root, root.widthProperty().multiply(0.40),
-                root.heightProperty().multiply(0.08), root.widthProperty().multiply(0.50),
-                root.heightProperty().multiply(0.28));
+        Pool regularPool = new Pool(root, root.widthProperty().multiply(0.40), root.heightProperty().multiply(0.08), root.widthProperty().multiply(0.50), root.heightProperty().multiply(0.28));
 
-        Pool childPool = new Pool(root,  root.widthProperty().multiply(0.60),
-                root.heightProperty().multiply(0.72), root.widthProperty().multiply(0.25),
-                root.heightProperty().multiply(0.15));
+        Pool childPool = new Pool(root, root.widthProperty().multiply(0.60), root.heightProperty().multiply(0.72), root.widthProperty().multiply(0.25), root.heightProperty().multiply(0.15));
 
         Pool[] tab = new Pool[3];
         tab[PoolsEnumeration.regular.ordinal()] = regularPool;

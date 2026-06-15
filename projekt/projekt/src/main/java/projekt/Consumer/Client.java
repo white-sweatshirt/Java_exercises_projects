@@ -9,7 +9,19 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 public abstract class Client extends Thread {
+    // Add this to your static variables in Client.java
+    protected static Pane mainPane;
+
+    // Add this setter method
+    public static void setMainPane(Pane pane) {
+        mainPane = pane;
+    }
+
+    public static int giveAmountOfVipes() {
+        return vipsInQue;
+    }
 
     protected static ReentrantLock queLock = new ReentrantLock(true);
     protected static Condition normalPersonCanPass = queLock.newCondition();

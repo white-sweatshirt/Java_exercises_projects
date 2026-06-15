@@ -14,8 +14,7 @@ public class Pool extends Thread {
     int currentPeopleInPool = 0;
     final Object lockForChecking = new Object();
 
-    public Pool(Pane basicPane, DoubleBinding XFromStart,
-                DoubleBinding YFromStart, DoubleBinding widthFromStart, DoubleBinding heightFromStart) {
+    public Pool(Pane basicPane, DoubleBinding XFromStart, DoubleBinding YFromStart, DoubleBinding widthFromStart, DoubleBinding heightFromStart) {
 
         this.assginedPanel = new Pane();
         graphicalRepresentation = new Rectangle();
@@ -43,6 +42,17 @@ public class Pool extends Thread {
             }
             return false;
         }
+    }
+
+    // Add to Pool.java
+    public int getCurrentPeopleCount() {
+        synchronized (lockForChecking) {
+            return currentPeopleInPool;
+        }
+    }
+
+    public int getMaxCapacity() {
+        return maxPeopleInPool;
     }
 
     public void leave() {

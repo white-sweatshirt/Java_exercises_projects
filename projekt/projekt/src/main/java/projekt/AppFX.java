@@ -5,6 +5,8 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import projekt.Consumer.VIPClient;
+import projekt.utility.Cashier;
 import projekt.utility.SetUp;
 import projekt.pool.Pool;
 import projekt.Consumer.Client;
@@ -21,40 +23,53 @@ public class AppFX extends Application {
         firstScene.setFill(Color.WHITE);
         stage.setTitle("Projekt Franciszek Wawer");
 
+        // Inside start() method of AppFX.java
+
         Pool[] pools = SetUp.producePoolsRepresentations(pane);
         SetUp.produceBackground(pane);
 
-        // Pass the pools to the clients so they can search for free spots
+        // Pass references to the abstract Client class
+        // Inside start() method of AppFX.java
         Client.setPools(pools);
+        Client.setMainPane(pane);
+        Cashier.setPools(pools);
 
         stage.show();
 
-        // -------------------------------------------------------------
-        // BACKEND THREAD: Keeps JavaFX unblocked and manages logic
-        // -------------------------------------------------------------
+        // HIGH-LOAD BACKEND GENERATOR
         Thread backendThread = new Thread(() -> {
-            // Start the independent Pool threads
+            // Start pool threads
             for (Pool p : pools) {
                 p.start();
             }
 
-            // Start Cashier thread here (assuming you instantiate it)
-            // Cashier cashier = new Cashier();
-            // cashier.start();
+            // Start cashier monitoring
+            Cashier cashier = new Cashier();
+            cashier.setDaemon(true);
+            cashier.start();
 
-            // Example generation of clients
+            // Rapidly generate 100 customers
             try {
-                for (int i = 0; i < 35; i++) {
-                    Thread.sleep(500); // Stagger customer arrivals
-                    regularCustomer customer = new regularCustomer(5000); // 5 seconds in pool
-                    customer.start();
+                for (int i = 0; i < 100; i++) {
+                    // Spawn a new thread every 100ms (10 clients per second)
+                    Thread.sleep(100);
+
+                    Client customer;
+                    // 20% chance to spawn a VIP, 80% regular customer
+                    if (Math.random() < 0.20) {
+                        customer = new VIPClient(4000); // VIP stays for 4 seconds
+                    } else {
+                        customer = new regularCustomer(6000); // Regular stays for 6 seconds
+                    }
+
+                    customer.setDaemon(true);
+                    customer.start(); // Launch independent thread
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         });
 
-        // Setting to daemon ensures it closes when you exit the JavaFX window
         backendThread.setDaemon(true);
         backendThread.start();
     }
