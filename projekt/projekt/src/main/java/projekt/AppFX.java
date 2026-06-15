@@ -3,8 +3,12 @@ package projekt;
 import javafx.animation.ScaleTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -24,15 +28,16 @@ import java.util.List;
 public class AppFX extends Application {
     final int timeInPoolsMs = 3000;
 
-    // --- Capacity Limits ---
-    private final int MAX_NON_VIPS = 44;
-    private final int MAX_VIPS = 22;
+    // --- Dynamic Slider Values (Volatile variables to ensure thread safety across engines) ---
+    private volatile int maxNonVipsLimit = 44;
+    private volatile int maxVipsLimit = 22;
+    private volatile double regularCustomerProportion = 0.75; // Out of remaining non-VIP percentage distribution
 
     // --- Collections to track active client threads ---
     private final List<Client> activeVIPs = new ArrayList<>();
     private final List<Client> activeNonVIPs = new ArrayList<>();
 
-    // --- Variables to track previous states to trigger interactive pop effects ---
+    // --- Tracking variables for the animation pop triggers ---
     private int lastNonVipCount = 0;
     private int lastVipCount = 0;
 
@@ -40,10 +45,10 @@ public class AppFX extends Application {
     public void start(Stage stage) {
 
         Pane pane = new Pane();
-        Scene firstScene = new Scene(pane, 1000, 800);
+        Scene firstScene = new Scene(pane, 1150, 800); // Expanded stage slightly to comfortably hold sliders box
         stage.setScene(firstScene);
         firstScene.setFill(Color.WHITE);
-        stage.setTitle("Projekt Franciszek Wawer - Isolated Metrics Engine");
+        stage.setTitle("Projekt Franciszek Wawer - Interactive Sliders Configurator");
 
         Pool[] pools = SetUp.producePoolsRepresentations(pane);
         SetUp.produceBackground(pane);
@@ -51,21 +56,72 @@ public class AppFX extends Application {
         Client.setMainPane(pane);
         Cashier.setPools(pools);
         Cashier cashier = SetUp.createQue(pane);
+
+        // =========================================================================
+        // STEP 1: CONSTRUCT THE USER CONFIGURATION DASHBOARD GRAPHICS
+        // =========================================================================
+        VBox controlPanel = new VBox(14);
+        controlPanel.setPadding(new Insets(15));
+        controlPanel.setStyle("-fx-background-color: #f4f4f6; -fx-border-color: #d1d1d6; -fx-border-width: 0 1px 0 0;");
+        controlPanel.prefHeightProperty().bind(pane.heightProperty());
+        controlPanel.layoutXProperty().setValue(0);
+        controlPanel.layoutYProperty().setValue(0);
+        controlPanel.prefWidthProperty().bind(pane.widthProperty().multiply(0.12));
+
+        Label controlTitle = new Label("SIM SETTINGS");
+        controlTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #3a3a3c;");
+
+        // Slider A: Max Non-VIPs Capacity (0 to 44)
+        Label lblNonVipCap = new Label("Max Non-VIP: 44");
+        Slider sliderNonVip = new Slider(0, 44, 44);
+        sliderNonVip.setBlockIncrement(1);
+        sliderNonVip.valueProperty().addListener((obs, oldVal, newVal) -> {
+            maxNonVipsLimit = newVal.intValue();
+            lblNonVipCap.setText("Max Non-VIP: " + maxNonVipsLimit);
+        });
+
+        // Slider B: Max VIPs Capacity (0 to 22)
+        Label lblVipCap = new Label("Max VIP: 22");
+        Slider sliderVip = new Slider(0, 22, 22);
+        sliderVip.setBlockIncrement(1);
+        sliderVip.valueProperty().addListener((obs, oldVal, newVal) -> {
+            maxVipsLimit = newVal.intValue();
+            lblVipCap.setText("Max VIP: " + maxVipsLimit);
+        });
+
+        // Slider C: Regular Customer Proportion Selection (0% to 100%)
+        Label lblRegularProp = new Label("Regular Cust: 75%");
+        Label lblFamilyProp = new Label("Family Unit: 25%");
+        Slider sliderProportion = new Slider(0.0, 1.0, 0.75);
+        sliderProportion.valueProperty().addListener((obs, oldVal, newVal) -> {
+            regularCustomerProportion = newVal.doubleValue();
+            int regPercent = (int) (regularCustomerProportion * 100);
+            int famPercent = 100 - regPercent;
+            lblRegularProp.setText("Regular Cust: " + regPercent + "%");
+            lblFamilyProp.setText("Family Unit: " + famPercent + "%");
+        });
+
+        controlPanel.getChildren().addAll(
+                controlTitle,
+                lblNonVipCap, sliderNonVip,
+                lblVipCap, sliderVip,
+                lblRegularProp, sliderProportion,
+                lblFamilyProp
+        );
+        pane.getChildren().add(controlPanel);
         stage.show();
 
         // =========================================================================
-        // THREAD 1: DEDICATED VISUAL METRICS MONITOR
+        // THREAD 1: SYSTEM WORKER / ACCELERATED GENERATOR LOOP
         // =========================================================================
         Thread uiMetricsMonitorThread = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    // Pull stats at a consistent high-frequency 50Hz clock rate
                     Thread.sleep(20);
 
                     int currentNonVip = activeNonVIPs.size();
                     int currentVip = activeVIPs.size();
 
-                    // Evaluate data state variations on this background thread first
                     if (currentNonVip != lastNonVipCount || currentVip != lastVipCount) {
                         final boolean animateNonVip = (currentNonVip != lastNonVipCount);
                         final boolean animateVip = (currentVip != lastVipCount);
@@ -73,14 +129,14 @@ public class AppFX extends Application {
                         lastNonVipCount = currentNonVip;
                         lastVipCount = currentVip;
 
-                        // Safely dispatch execution block to JavaFX Application thread
                         Platform.runLater(() -> {
+                            // Max dynamic caps updated on display label scoreboards in real-time
                             if (animateNonVip) {
-                                SetUp.normalCountLabel.setText("Queue: " + currentNonVip + " / " + MAX_NON_VIPS);
+                                SetUp.normalCountLabel.setText("Queue: " + currentNonVip + " / " + maxNonVipsLimit);
                                 animatePopEffect(SetUp.normalCountLabel);
                             }
                             if (animateVip) {
-                                SetUp.vipCountLabel.setText("Queue: " + currentVip + " / " + MAX_VIPS);
+                                SetUp.vipCountLabel.setText("Queue: " + currentVip + " / " + maxVipsLimit);
                                 animatePopEffect(SetUp.vipCountLabel);
                             }
                         });
@@ -91,38 +147,50 @@ public class AppFX extends Application {
             }
         });
         uiMetricsMonitorThread.setDaemon(true);
+
+        // =========================================================================
+        // THREAD 2: DEDICATED VISUAL METRICS REFRESH ENGINE
+        // =========================================================================
         Thread backendThread = new Thread(() -> {
             for (Pool p : pools) {
                 p.start();
             }
             cashier.start();
             uiMetricsMonitorThread.start();
+
             try {
                 PoolCleaner cleanerTask = new PoolCleaner(pane);
                 Thread cleanerThread = new Thread(cleanerTask);
                 cleanerThread.start();
+
                 while (!Thread.currentThread().isInterrupted()) {
                     Thread.sleep(20);
+
                     activeVIPs.removeIf(client -> !client.isAlive());
                     activeNonVIPs.removeIf(client -> !client.isAlive());
+
                     double randomValue = Math.random();
                     Client customer = null;
-                    if (randomValue < 0.07) {
-                        if (activeVIPs.size() < MAX_VIPS) {
+
+                    if (randomValue < 0.20) {
+                        // VIP Spawn using live values from the Slider
+                        if (activeVIPs.size() < maxVipsLimit) {
                             customer = new VIPClient(timeInPoolsMs);
                             activeVIPs.add(customer);
                         }
-                    } else if (randomValue < 0.18) {
-                        if (activeNonVIPs.size() < MAX_NON_VIPS) {
-                            customer = new ClientWithChild(timeInPoolsMs);
-                            activeNonVIPs.add(customer);
-                        }
-                    } else if (randomValue < 0.35) {
-                        if (activeNonVIPs.size() < MAX_NON_VIPS) {
-                            customer = new regularCustomer(timeInPoolsMs);
+                    } else {
+                        // Non-VIP distribution split based on user-controlled proportions
+                        if (activeNonVIPs.size() < maxNonVipsLimit) {
+                            double strategyRoll = Math.random();
+                            if (strategyRoll < regularCustomerProportion) {
+                                customer = new regularCustomer(timeInPoolsMs);
+                            } else {
+                                customer = new ClientWithChild(timeInPoolsMs);
+                            }
                             activeNonVIPs.add(customer);
                         }
                     }
+
                     if (customer != null) {
                         customer.start();
                     }
