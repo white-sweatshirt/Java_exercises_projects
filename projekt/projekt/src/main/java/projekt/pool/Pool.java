@@ -7,6 +7,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class Pool {
     // class meant only to mechanicly represent given pool.
     // it has representation  on graphics it just gives interface for usage of pool.
@@ -17,6 +20,8 @@ public class Pool {
     int maxPeopleInPool;// purly helping just serves to minimize calculations.
     int currentPeopleInPool;
     final Object lockForChecking = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition pullFull = lock.newCondition();
 
     public boolean sayWheterThereIsPlace() {
         synchronized (lockForChecking) {

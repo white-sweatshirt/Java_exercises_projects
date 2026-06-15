@@ -1,6 +1,5 @@
-package projekt.graphics;
+package projekt.utility;
 
-import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.layout.Pane;
@@ -42,7 +41,7 @@ public final class SetUp {
         basicPane.getChildren().addAll(a, b);
     }
 
-    public static void addVisualRepresentionOfQue(Pane basicPane) {
+    public static void addDesk(Pane basicPane) {
         Rectangle desk = new Rectangle();
         desk.xProperty().bind(basicPane.widthProperty().multiply(0.09));
         desk.yProperty().bind(basicPane.heightProperty().multiply(0.5).add(100));
