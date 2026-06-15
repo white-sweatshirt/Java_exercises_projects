@@ -3,6 +3,9 @@ package projekt.Consumer;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -13,6 +16,7 @@ public class ClientWithChild extends Client {
 
     private Rectangle childRepresentation;
     private final double childSize = 10.0;
+    private HBox familyGroup; // Container to hold parent and child together in the FlowPane
 
     public ClientWithChild(int timeToSpendMs) {
         this.timeItWantsToSpendms = timeToSpendMs;
@@ -20,7 +24,7 @@ public class ClientWithChild extends Client {
 
     @Override
     public void run() {
-        // 1. Spawn in the LEFT queue visually (Left Column: 0% to 10%)
+        // 1. Spawn in the LEFT queue visually
         Platform.runLater(() -> {
             this.circleRepresentation = new Circle(constRadius, Color.DARKGREEN);
 
@@ -38,7 +42,6 @@ public class ClientWithChild extends Client {
             circleRepresentation.setCenterY(spawnY);
 
             this.childRepresentation = new Rectangle(childSize, childSize, Color.LIGHTGREEN);
-            // In the queue, they remain static until entry, but let's clear properties clean
             childRepresentation.setX(spawnX + constRadius);
             childRepresentation.setY(spawnY - (childSize / 2));
 
@@ -47,7 +50,7 @@ public class ClientWithChild extends Client {
 
         Pool chosenPool = null;
 
-        // 2. Wait logically for a spot in a pool
+        // 2. Wait logically for a spot
         queLock.lock();
         try {
             while (vipsInQue > 0 || (chosenPool = claimFreePool()) == null) {
@@ -62,20 +65,21 @@ public class ClientWithChild extends Client {
 
         final Pool targetPool = chosenPool;
 
-        // 3. Move from queue to pool visually with dynamic property bindings
+        // 3. Move to FlowPane layout safely wrapped in an HBox
         Platform.runLater(() -> {
             mainPane.getChildren().removeAll(circleRepresentation, childRepresentation);
 
-            // Binds circleRepresentation.centerXProperty and centerYProperty dynamically to pool bounds
-            goToChosenPool(targetPool.assginedPanel);
+            // Create a small combined container for the parent and child
+            familyGroup = new HBox(4); // 4px spacing between them
+            familyGroup.setAlignment(Pos.CENTER_LEFT);
 
-            // COMPLIANCE FIX: Dynamically bind the child to move with the parent inside the pool pane
-            childRepresentation.xProperty().bind(circleRepresentation.centerXProperty().add(constRadius));
-            childRepresentation.yProperty().bind(circleRepresentation.centerYProperty().subtract(childSize / 2));
+            // Put shapes in the family container
+            familyGroup.getChildren().addAll(circleRepresentation, childRepresentation);
 
-            targetPool.assginedPanel.getChildren().add(childRepresentation);
+            // Append the group to the pool's FlowPane
+            targetPool.assginedPanel.getChildren().add(familyGroup);
 
-            // Setup parallel transitions
+            // Scale transitions work perfectly on the inner elements
             ScaleTransition shrinkParent = new ScaleTransition(Duration.millis(timeItWantsToSpendms), circleRepresentation);
             shrinkParent.setToX(0.0);
             shrinkParent.setToY(0.0);
@@ -88,7 +92,7 @@ public class ClientWithChild extends Client {
             parallelTransition.play();
         });
 
-        // 4. Pool session duration
+        // 4. Stay duration
         try {
             Thread.sleep(timeItWantsToSpendms);
         } catch (InterruptedException e) {
@@ -97,12 +101,10 @@ public class ClientWithChild extends Client {
             targetPool.leave();
 
             Platform.runLater(() -> {
-                // Unbind on exit to avoid memory leaks when shapes are disposed
-                childRepresentation.xProperty().unbind();
-                childRepresentation.yProperty().unbind();
-
-                getOut(targetPool.assginedPanel);
-                targetPool.assginedPanel.getChildren().remove(childRepresentation);
+                // Simply remove the single container from the pool panel
+                if (familyGroup != null) {
+                    targetPool.assginedPanel.getChildren().remove(familyGroup);
+                }
             });
 
             queLock.lock();
