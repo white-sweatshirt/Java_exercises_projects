@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import projekt.Consumer.VIPClient;
 import projekt.utility.Cashier;
+import projekt.utility.ConfigReader;
 import projekt.utility.PoolCleaner;
 import projekt.utility.SetUp;
 import projekt.pool.Pool;
@@ -22,33 +23,38 @@ import projekt.Consumer.Client;
 import projekt.Consumer.regularCustomer;
 import projekt.Consumer.ClientWithChild;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AppFX extends Application {
+    // Pace of client sessions inside the pools
     final int timeInPoolsMs = 3000;
 
-    // --- Dynamic Slider Values (Volatile variables to ensure thread safety across engines) ---
-    private volatile int maxNonVipsLimit = 44;
-    private volatile int maxVipsLimit = 22;
-    private volatile double regularCustomerProportion = 0.75; // Out of remaining non-VIP percentage distribution
+    // --- Dynamic Limit Parameters (Volatile to safely update across runtime engine loops) ---
+    private volatile int maxNonVipsLimit;
+    private volatile int maxVipsLimit;
+    private volatile double regularCustomerProportion = 0.75;
 
-    // --- Collections to track active client threads ---
-    private final List<Client> activeVIPs = new ArrayList<>();
-    private final List<Client> activeNonVIPs = new ArrayList<>();
+    // --- Concurrent Thread Monitoring Lists (Fixes ConcurrentModificationExceptions) ---
+    private final List<Client> activeVIPs = new CopyOnWriteArrayList<>();
+    private final List<Client> activeNonVIPs = new CopyOnWriteArrayList<>();
 
-    // --- Tracking variables for the animation pop triggers ---
+    // --- State delta lookups to check text variations ---
     private int lastNonVipCount = 0;
     private int lastVipCount = 0;
 
     @Override
     public void start(Stage stage) {
+        // Step 1: Read numbers from file and enforce the strict upper limits rules right away
+        ConfigReader config = new ConfigReader();
+        this.maxNonVipsLimit = config.getMaxNonVips();
+        this.maxVipsLimit = config.getMaxVips();
 
         Pane pane = new Pane();
-        Scene firstScene = new Scene(pane, 1150, 800); // Expanded stage slightly to comfortably hold sliders box
+        Scene firstScene = new Scene(pane, 1150, 800);
         stage.setScene(firstScene);
         firstScene.setFill(Color.WHITE);
-        stage.setTitle("Projekt Franciszek Wawer - Interactive Sliders Configurator");
+        stage.setTitle("Projekt Franciszek Wawer - Complete Concurrent Pool System");
 
         Pool[] pools = SetUp.producePoolsRepresentations(pane);
         SetUp.produceBackground(pane);
@@ -58,7 +64,7 @@ public class AppFX extends Application {
         Cashier cashier = SetUp.createQue(pane);
 
         // =========================================================================
-        // STEP 1: CONSTRUCT THE USER CONFIGURATION DASHBOARD GRAPHICS
+        // STEP 2: CONSTRUCT CONTROL INTERFACE PANEL
         // =========================================================================
         VBox controlPanel = new VBox(14);
         controlPanel.setPadding(new Insets(15));
@@ -68,28 +74,28 @@ public class AppFX extends Application {
         controlPanel.layoutYProperty().setValue(0);
         controlPanel.prefWidthProperty().bind(pane.widthProperty().multiply(0.12));
 
-        Label controlTitle = new Label("SIM SETTINGS");
+        Label controlTitle = new Label("LIMIT SETTINGS");
         controlTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #3a3a3c;");
 
-        // Slider A: Max Non-VIPs Capacity (0 to 44)
-        Label lblNonVipCap = new Label("Max Non-VIP: 44");
-        Slider sliderNonVip = new Slider(0, 44, 44);
+        // Slider A: Max limit for Non-VIPs (Max constraint 44, loaded from file position initialization)
+        Label lblNonVipCap = new Label("Max Limit Non-VIP: " + maxNonVipsLimit);
+        Slider sliderNonVip = new Slider(0, 44, maxNonVipsLimit);
         sliderNonVip.setBlockIncrement(1);
         sliderNonVip.valueProperty().addListener((obs, oldVal, newVal) -> {
             maxNonVipsLimit = newVal.intValue();
-            lblNonVipCap.setText("Max Non-VIP: " + maxNonVipsLimit);
+            lblNonVipCap.setText("Max Limit Non-VIP: " + maxNonVipsLimit);
         });
 
-        // Slider B: Max VIPs Capacity (0 to 22)
-        Label lblVipCap = new Label("Max VIP: 22");
-        Slider sliderVip = new Slider(0, 22, 22);
+        // Slider B: Max limit for VIPs (Max constraint 22, loaded from file position initialization)
+        Label lblVipCap = new Label("Max Limit VIP: " + maxVipsLimit);
+        Slider sliderVip = new Slider(0, 22, maxVipsLimit);
         sliderVip.setBlockIncrement(1);
         sliderVip.valueProperty().addListener((obs, oldVal, newVal) -> {
             maxVipsLimit = newVal.intValue();
-            lblVipCap.setText("Max VIP: " + maxVipsLimit);
+            lblVipCap.setText("Max Limit VIP: " + maxVipsLimit);
         });
 
-        // Slider C: Regular Customer Proportion Selection (0% to 100%)
+        // Slider C: Regular vs Family unit distribution proportion ratio split
         Label lblRegularProp = new Label("Regular Cust: 75%");
         Label lblFamilyProp = new Label("Family Unit: 25%");
         Slider sliderProportion = new Slider(0.0, 1.0, 0.75);
@@ -111,8 +117,12 @@ public class AppFX extends Application {
         pane.getChildren().add(controlPanel);
         stage.show();
 
+        // Bind text readouts to display configuration bounds accurately immediately on start
+        SetUp.normalCountLabel.setText("Queue: 0 / " + maxNonVipsLimit);
+        SetUp.vipCountLabel.setText("Queue: 0 / " + maxVipsLimit);
+
         // =========================================================================
-        // THREAD 1: SYSTEM WORKER / ACCELERATED GENERATOR LOOP
+        // THREAD 1: ISOLATED RUNTIME SCOREBOARD METRICS MONITOR
         // =========================================================================
         Thread uiMetricsMonitorThread = new Thread(() -> {
             try {
@@ -130,7 +140,6 @@ public class AppFX extends Application {
                         lastVipCount = currentVip;
 
                         Platform.runLater(() -> {
-                            // Max dynamic caps updated on display label scoreboards in real-time
                             if (animateNonVip) {
                                 SetUp.normalCountLabel.setText("Queue: " + currentNonVip + " / " + maxNonVipsLimit);
                                 animatePopEffect(SetUp.normalCountLabel);
@@ -149,7 +158,7 @@ public class AppFX extends Application {
         uiMetricsMonitorThread.setDaemon(true);
 
         // =========================================================================
-        // THREAD 2: DEDICATED VISUAL METRICS REFRESH ENGINE
+        // THREAD 2: NATURAL GENERATION BACKGROUND SPRAWLER ENGINE
         // =========================================================================
         Thread backendThread = new Thread(() -> {
             for (Pool p : pools) {
@@ -166,6 +175,7 @@ public class AppFX extends Application {
                 while (!Thread.currentThread().isInterrupted()) {
                     Thread.sleep(20);
 
+                    // Safely remove dead client threads from our tracking metrics
                     activeVIPs.removeIf(client -> !client.isAlive());
                     activeNonVIPs.removeIf(client -> !client.isAlive());
 
@@ -173,13 +183,13 @@ public class AppFX extends Application {
                     Client customer = null;
 
                     if (randomValue < 0.20) {
-                        // VIP Spawn using live values from the Slider
+                        // Check against user-defined upper limit set by the slider component
                         if (activeVIPs.size() < maxVipsLimit) {
                             customer = new VIPClient(timeInPoolsMs);
                             activeVIPs.add(customer);
                         }
                     } else {
-                        // Non-VIP distribution split based on user-controlled proportions
+                        // Check against user-defined upper limit set by the slider component
                         if (activeNonVIPs.size() < maxNonVipsLimit) {
                             double strategyRoll = Math.random();
                             if (strategyRoll < regularCustomerProportion) {

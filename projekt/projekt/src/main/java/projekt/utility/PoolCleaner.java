@@ -17,7 +17,6 @@ import projekt.pool.Pool;
 
 public class PoolCleaner implements Runnable {
 
-    // INCREASED FREQUENCY: Changed from 20000ms (20s) to 5000ms (5s) for high interaction
     private final long TIME_BETWEEN_CLEANINGS = 5000;
     private final Random random = new Random();
     private static volatile boolean isCleaningPhase = false;
@@ -31,7 +30,6 @@ public class PoolCleaner implements Runnable {
         Platform.runLater(() -> {
             this.componentLayoutWrapper = new VBox(4);
             this.componentLayoutWrapper.setAlignment(Pos.CENTER);
-
             this.componentLayoutWrapper.setVisible(false);
 
             this.cleanerCircle = new Circle(15, Color.RED);
@@ -65,22 +63,36 @@ public class PoolCleaner implements Runnable {
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                // Wait out the interval before triggering a cleaning session
                 Thread.sleep(TIME_BETWEEN_CLEANINGS);
+
+                // PHASE 1: Announce cleaning phase to close entrance queues
                 Client.queLock.lock();
                 try {
                     isCleaningPhase = true;
                     Platform.runLater(() -> {
                         if (componentLayoutWrapper != null) {
                             componentLayoutWrapper.setVisible(true);
+                            blinkAnimation.play(); // Fixed: Explicitly starting animation
                         }
                     });
-                    while (!areAllPoolsEmpty()) {
-                        Thread.sleep(200);
-                    }
+                } finally {
+                    Client.queLock.unlock(); // CRITICAL: Release lock so active pool users can exit!
+                }
+
+                // PHASE 2: Passive wait loop (No locks held, letting pools naturally drain)
+                while (!areAllPoolsEmpty()) {
+                    Thread.sleep(200);
+                }
+
+                // PHASE 3: Perform actual structural maintenance
+                Client.queLock.lock();
+                try {
                     Platform.runLater(() -> cleanerCircle.setFill(Color.DARKRED));
                     long cleaningDuration = 4000;
                     Thread.sleep(cleaningDuration);
                 } finally {
+                    // PHASE 4: Open up the complex and alert waiting queues
                     isCleaningPhase = false;
                     Platform.runLater(() -> {
                         if (componentLayoutWrapper != null) {
@@ -90,10 +102,12 @@ public class PoolCleaner implements Runnable {
                             componentLayoutWrapper.setVisible(false);
                         }
                     });
+
                     Client.normalPersonCanPass.signalAll();
                     Client.vipCanPass.signalAll();
                     Client.queLock.unlock();
                 }
+
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -103,8 +117,9 @@ public class PoolCleaner implements Runnable {
 
     private boolean areAllPoolsEmpty() {
         if (Client.getAllPools() == null) return true;
-        for (Pool pool : Client.getAllPools())
+        for (Pool pool : Client.getAllPools()) {
             if (pool.getCurrentPeopleCount() > 0) return false;
+        }
         return true;
     }
 }

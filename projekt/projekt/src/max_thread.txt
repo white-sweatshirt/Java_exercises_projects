@@ -1,0 +1,2 @@
+max_non_vips=30
+max_vips=15
