@@ -39,7 +39,7 @@ public class AppFX extends Application {
             }
             cashier.start();
             try {
-                PoolCleaner cleanerTask = new PoolCleaner();
+                PoolCleaner cleanerTask = new PoolCleaner(pane);
                 Thread cleanerThread = new Thread(cleanerTask);
                 cleanerThread.start(); // Spawns the independent monitoring runtime
                 for (int i = 0; i < 100; i++) {
