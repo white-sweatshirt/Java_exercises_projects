@@ -22,7 +22,6 @@ public class Cashier extends Thread {
         while (!isInterrupted()) {
             try {
                 administerPools();
-
                 // The cashier checks the pools every 2 seconds
                 Thread.sleep(2000);
             } catch (InterruptedException e) {

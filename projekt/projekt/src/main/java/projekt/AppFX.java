@@ -11,6 +11,7 @@ import projekt.utility.SetUp;
 import projekt.pool.Pool;
 import projekt.Consumer.Client;
 import projekt.Consumer.regularCustomer;
+import projekt.Consumer.ClientWithChild; // Import the new class
 
 public class AppFX extends Application {
 
@@ -33,10 +34,8 @@ public class AppFX extends Application {
         Client.setPools(pools);
         Client.setMainPane(pane);
         Cashier.setPools(pools);
-
+        Cashier cashier = SetUp.createQue(pane);
         stage.show();
-
-        // HIGH-LOAD BACKEND GENERATOR
         Thread backendThread = new Thread(() -> {
             // Start pool threads
             for (Pool p : pools) {
@@ -44,7 +43,6 @@ public class AppFX extends Application {
             }
 
             // Start cashier monitoring
-            Cashier cashier = new Cashier();
             cashier.setDaemon(true);
             cashier.start();
 
@@ -55,9 +53,13 @@ public class AppFX extends Application {
                     Thread.sleep(100);
 
                     Client customer;
-                    // 20% chance to spawn a VIP, 80% regular customer
-                    if (Math.random() < 0.20) {
+                    double randomValue = Math.random();
+
+                    // Distribution: 20% VIP, 20% Client with Child, 60% Regular Customer
+                    if (randomValue < 0.20) {
                         customer = new VIPClient(4000); // VIP stays for 4 seconds
+                    } else if (randomValue < 0.40) {
+                        customer = new ClientWithChild(5000); // Stays for 5 seconds
                     } else {
                         customer = new regularCustomer(6000); // Regular stays for 6 seconds
                     }
@@ -69,7 +71,6 @@ public class AppFX extends Application {
                 Thread.currentThread().interrupt();
             }
         });
-
         backendThread.setDaemon(true);
         backendThread.start();
     }

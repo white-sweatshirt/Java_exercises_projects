@@ -16,15 +16,18 @@ public final class SetUp {
 
     final static double lineEndY = 100;
 
-    private static void addCashier(DoubleProperty Xstart, DoubleBinding Ystart, DoubleProperty radius, Pane pane) {
+    public static Cashier addCashier(DoubleProperty Xstart, DoubleBinding Ystart, DoubleProperty radius, Pane pane) {
         // this proves person at work  is not ...
         Circle cashier = new Circle();
         cashier.setFill(Color.CORAL);
         cashier.setStroke(Color.CORAL);
+
         cashier.radiusProperty().bind(radius);
-        cashier.setCenterX(Xstart.doubleValue());
-        cashier.setCenterY(Ystart.doubleValue());
+        cashier.centerXProperty().bind(Xstart);
+        cashier.centerYProperty().bind(Ystart);
+
         pane.getChildren().add(cashier);
+        return new Cashier();
     }
 
     private static void addLines(Pane basicPane) {
@@ -41,7 +44,7 @@ public final class SetUp {
         basicPane.getChildren().addAll(a, b);
     }
 
-    public static void addDesk(Pane basicPane) {
+    public static Cashier createQue(Pane basicPane) {
         Rectangle desk = new Rectangle();
         desk.xProperty().bind(basicPane.widthProperty().multiply(0.09));
         desk.yProperty().bind(basicPane.heightProperty().multiply(0.5).add(100));
@@ -50,8 +53,11 @@ public final class SetUp {
         desk.setFill(Color.BROWN);
         desk.setStroke(Color.BLACK);
         basicPane.getChildren().add(desk);
-        ;
-        addCashier(desk.xProperty(), desk.yProperty().multiply(2), desk.heightProperty(), basicPane);
+
+        DoubleProperty xCenterProp = new javafx.beans.property.SimpleDoubleProperty();
+        xCenterProp.bind(desk.xProperty().add(desk.widthProperty().divide(2)));
+        DoubleBinding yCenterBinding = desk.yProperty().add(desk.heightProperty()).add(desk.heightProperty());
+        return addCashier(xCenterProp, yCenterBinding, desk.heightProperty(), basicPane);
     }
 
     public static Pool[] producePoolsRepresentations(Pane root) {
