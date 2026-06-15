@@ -7,6 +7,8 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import projekt.PoolsEnumeration;
+import projekt.Consumer.Client; // Assuming Client is in this package path
 
 public class Pool extends Thread {
     // This remains public and acts as the FlowPane layout layer for clients
@@ -16,6 +18,11 @@ public class Pool extends Thread {
     // Hardcoded max capacity as requested
     int maxPeopleInPool = 10;
     int currentPeopleInPool = 0;
+
+    // --- Age and Enum Type Tracking ---
+    int totalAgeInPool = 0;
+    private PoolsEnumeration poolType;
+
     final Object lockForChecking = new Object();
 
     public Pool(Pane basicPane, DoubleBinding XFromStart, DoubleBinding YFromStart, DoubleBinding widthFromStart, DoubleBinding heightFromStart) {
@@ -57,14 +64,38 @@ public class Pool extends Thread {
         basicPane.getChildren().add(baseLayerPane);
     }
 
-    // Replaces isFree() and enter()
-    public boolean tryEnter() {
+    // Setter to track which type of pool this instance represents
+    public void setPoolType(PoolsEnumeration poolType) {
+        this.poolType = poolType;
+    }
+
+    public PoolsEnumeration getPoolType() {
+        return this.poolType;
+    }
+
+    // Updated to accept the client context for validation checks
+    public boolean tryEnter(Client client) {
         synchronized (lockForChecking) {
-            if (currentPeopleInPool < maxPeopleInPool) {
-                currentPeopleInPool++; // Claim it immediately while locked
-                return true;
+            // Check hard limit capacity first
+            if (currentPeopleInPool >= maxPeopleInPool) {
+                return false;
             }
-            return false;
+
+            // Enforce age constraint if this is the regular pool
+            if (this.poolType == PoolsEnumeration.regular) {
+                int nextPeopleCount = currentPeopleInPool + 1;
+                int nextTotalAge = totalAgeInPool + client.getAge();
+                double projectedAverageAge = (double) nextTotalAge / nextPeopleCount;
+
+                if (projectedAverageAge > 40.0) {
+                    return false; // Deny entry to maintain the average age policy
+                }
+            }
+
+            // Admission valid: Update metrics safely inside synchronization lock
+            currentPeopleInPool++;
+            totalAgeInPool += client.getAge();
+            return true;
         }
     }
 
@@ -79,9 +110,14 @@ public class Pool extends Thread {
         return maxPeopleInPool;
     }
 
-    public void leave() {
+    // Updated to subtract the leaving client's age metrics safely
+    public void leave(Client client) {
         synchronized (lockForChecking) {
             currentPeopleInPool--;
+            totalAgeInPool -= client.getAge();
+            if (totalAgeInPool < 0) {
+                totalAgeInPool = 0; // Boundary safety check
+            }
         }
     }
 

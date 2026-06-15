@@ -62,14 +62,15 @@ public final class SetUp {
     }
 
     public static Pool[] producePoolsRepresentations(Pane root) {
-        Pool olympicPool = new Pool(root, root.widthProperty().multiply(0.45), root.heightProperty().multiply(0.45),
-                root.widthProperty().multiply(0.40), root.heightProperty().multiply(0.18));
+        Pool olympicPool = new Pool(root, root.widthProperty().multiply(0.45), root.heightProperty().multiply(0.45), root.widthProperty().multiply(0.40), root.heightProperty().multiply(0.18));
+        olympicPool.setPoolType(PoolsEnumeration.olympic);
 
         Pool regularPool = new Pool(root, root.widthProperty().multiply(0.40), root.heightProperty().multiply(0.08),
                 root.widthProperty().multiply(0.50), root.heightProperty().multiply(0.28));
+        regularPool.setPoolType(PoolsEnumeration.regular);
 
-        Pool childPool = new Pool(root, root.widthProperty().multiply(0.60), root.heightProperty().multiply(0.72),
-                root.widthProperty().multiply(0.25), root.heightProperty().multiply(0.15));
+        Pool childPool = new Pool(root, root.widthProperty().multiply(0.60), root.heightProperty().multiply(0.72), root.widthProperty().multiply(0.25), root.heightProperty().multiply(0.15));
+        childPool.setPoolType(PoolsEnumeration.children);
 
         Pool[] tab = new Pool[3];
         tab[PoolsEnumeration.regular.ordinal()] = regularPool;

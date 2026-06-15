@@ -5,7 +5,7 @@ import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -24,17 +24,13 @@ public class ClientWithChild extends Client {
 
     @Override
     public void run() {
-        // 1. Spawn in the LEFT queue visually
         Platform.runLater(() -> {
             this.circleRepresentation = new Circle(constRadius, Color.DARKGREEN);
-
             double minX = mainPane.getWidth() * 0.0;
             double maxX = mainPane.getWidth() * 0.1;
             double maxY = mainPane.getHeight() * 0.5;
-
             double safeMinX = minX + constRadius;
             double safeMaxX = maxX - constRadius;
-
             double spawnX = safeMinX + Math.random() * (safeMaxX - safeMinX);
             double spawnY = constRadius + Math.random() * (maxY - constRadius * 2);
 
@@ -98,7 +94,7 @@ public class ClientWithChild extends Client {
         } catch (InterruptedException e) {
             interrupt();
         } finally {
-            targetPool.leave();
+            targetPool.leave(this);
 
             Platform.runLater(() -> {
                 // Simply remove the single container from the pool panel

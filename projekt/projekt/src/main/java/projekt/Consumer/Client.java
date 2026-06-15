@@ -28,7 +28,7 @@ public abstract class Client extends Thread {
     protected static Condition vipCanPass = queLock.newCondition();
 
     protected static int vipsInQue = 0;
-    protected static Pool[] allPools; // Reference to all available pools
+    protected static Pool[] allPools;
 
     protected int timeItWantsToSpendms;
     final protected int constRadius = 10;
@@ -38,20 +38,27 @@ public abstract class Client extends Thread {
     public static void setPools(Pool[] pools) {
         allPools = pools;
     }
+    protected int age;
 
+    public int getAge() {
+        return this.age;
+    }
     @Override
     public abstract void run();
 
     // Replaces getFreePool()
     protected Pool claimFreePool() {
         for (Pool pool : allPools) {
-            if (pool.tryEnter()) {
+            if (pool.tryEnter(this)) {
                 return pool; // Spot is successfully claimed
             }
         }
         return null;
     }
+    public Client() {
 
+        this.age = 18 + (int)(Math.random() * 53);
+    }
     public void goToChosenPool(Pane poolPane) {
         poolPane.getChildren().add(circleRepresentation);
     }

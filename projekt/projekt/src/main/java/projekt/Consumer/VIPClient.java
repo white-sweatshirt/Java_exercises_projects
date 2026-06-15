@@ -10,12 +10,12 @@ import projekt.pool.Pool;
 public class VIPClient extends Client {
 
     public VIPClient(int timeToSpendMs) {
+
         this.timeItWantsToSpendms = timeToSpendMs;
     }
 
     @Override
     public void run() {
-        // 1. Spawn in the queue visually as GOLD
         Platform.runLater(() -> {
             this.circleRepresentation = new Circle(constRadius, Color.GOLD);
             circleRepresentation.setStroke(Color.BLACK);
@@ -31,18 +31,15 @@ public class VIPClient extends Client {
         });
 
         Pool chosenPool = null;
-
-        // 2. Lock and register as a waiting VIP
+        // queLock for having unambigous numbers defing rihght of entry
         queLock.lock();
         try {
-            vipsInQue++; // Alert regular customers that a VIP is waiting
-
-            // VIPs only wait if all pools are completely full
+            vipsInQue++; // forcing non vip consumers to wait for their turn
+            // VIPs can only wait  if and only if all pools are completely full
             while ((chosenPool = claimFreePool()) == null) {
                 vipCanPass.await();
             }
-
-            vipsInQue--; // Successfully leaving the queue to enter a pool
+            vipsInQue--;
         } catch (InterruptedException e) {
             interrupt();
             return;
@@ -52,7 +49,6 @@ public class VIPClient extends Client {
 
         final Pool targetPool = chosenPool;
 
-        // 3. Move from queue to pool visually
         Platform.runLater(() -> {
             mainPane.getChildren().remove(circleRepresentation);
             goToChosenPool(targetPool.assginedPanel);
@@ -63,14 +59,12 @@ public class VIPClient extends Client {
             shrink.play();
         });
 
-        // 4. Enjoy the pool
         try {
             Thread.sleep(timeItWantsToSpendms);
         } catch (InterruptedException e) {
             interrupt();
         } finally {
-            // Safe exit tracking
-            targetPool.leave();
+            targetPool.leave(this);
             Platform.runLater(() -> getOut(targetPool.assginedPanel));
 
             queLock.lock();
