@@ -15,22 +15,18 @@ public class regularCustomer extends Client {
 
     @Override
     public void run() {
-        // 1. Spawn in the queue visually BEFORE waiting for a pool
+        // 1. Spawn in the LEFT queue visually (Left Column: 0% to 10%)
         Platform.runLater(() -> {
             this.circleRepresentation = new Circle(constRadius, Color.BLUE);
 
-            // Calculate bounds based on your SetUp.addLines logic
-            // X is between 10% and 20% of the pane width
-            // Y is between 0 and 50% of the pane height
-            double minX = mainPane.getWidth() * 0.1;
-            double maxX = mainPane.getWidth() * 0.2;
+            // Shifted bounds to the left lane
+            double minX = mainPane.getWidth() * 0.0;
+            double maxX = mainPane.getWidth() * 0.1;
             double maxY = mainPane.getHeight() * 0.5;
 
-            // Keep the circle safely inside the lines by accounting for its radius
             double safeMinX = minX + constRadius;
             double safeMaxX = maxX - constRadius;
 
-            // Randomize position within the queue bounds
             circleRepresentation.setCenterX(safeMinX + Math.random() * (safeMaxX - safeMinX));
             circleRepresentation.setCenterY(constRadius + Math.random() * (maxY - constRadius * 2));
 
@@ -56,26 +52,21 @@ public class regularCustomer extends Client {
 
         // 3. Move from the queue to the pool visually
         Platform.runLater(() -> {
-            // Remove from the main queue pane
             mainPane.getChildren().remove(circleRepresentation);
-
-            // Add to the specific pool pane
             goToChosenPool(targetPool.assginedPanel);
 
-            // Play shrinking animation
             ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), circleRepresentation);
             shrink.setToX(0.0);
             shrink.setToY(0.0);
             shrink.play();
         });
 
-        // 4. Sleep for the duration of the animation on the backend thread
+        // 4. Sleep for the duration of the animation
         try {
             Thread.sleep(timeItWantsToSpendms);
         } catch (InterruptedException e) {
             interrupt();
         } finally {
-            // Guarantee that the spot is freed and the client is removed visually
             targetPool.leave();
             Platform.runLater(() -> getOut(targetPool.assginedPanel));
 
