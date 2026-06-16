@@ -8,9 +8,9 @@ import projekt.pool.Pool;
 import projekt.utility.PoolCleaner;
 import projekt.utility.SetUp;
 
-public class regularCustomer extends Client {
+public class RegularCustomer extends Client {
 
-    public regularCustomer(int timeToSpendMs) {
+    public RegularCustomer(int timeToSpendMs) {
         super();
         this.timeItWantsToSpendms = timeToSpendMs;
     }
@@ -37,13 +37,12 @@ public class regularCustomer extends Client {
         }
 
         final Pool targetPool = chosenPool;
-        // runLater pozwala na opzninie wykonia animacji chodzi o oszczednosc watku application JavyFX
+        // runLater pozwala na opzninie wykonie animacji
         Platform.runLater(() -> {
             // deleting from graphics
             SetUp.normalQueueBox.getChildren().remove(componentLayoutWrapper);
             goToChosenPool(targetPool.assginedPanel);
-            ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms),
-                    componentLayoutWrapper);
+            ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), componentLayoutWrapper);
             shrink.setToX(0.0);
             shrink.setToY(0.0);
             shrink.play();
@@ -57,8 +56,8 @@ public class regularCustomer extends Client {
             targetPool.leave(this);
             Platform.runLater(() -> getOut(targetPool.assginedPanel));
 
-            queLock.lock();
             try {
+                queLock.lock();
                 vipCanPass.signalAll();
                 normalPersonCanPass.signalAll();
             } finally {

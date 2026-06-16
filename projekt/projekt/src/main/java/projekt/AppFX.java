@@ -20,7 +20,7 @@ import projekt.utility.PoolCleaner;
 import projekt.utility.SetUp;
 import projekt.pool.Pool;
 import projekt.Consumer.Client;
-import projekt.Consumer.regularCustomer;
+import projekt.Consumer.RegularCustomer;
 import projekt.Consumer.ClientWithChild;
 
 import java.util.List;
@@ -60,7 +60,7 @@ public class AppFX extends Application {
         Client.setMainPane(pane);
         Cashier.setPools(pools);
         Cashier cashier = SetUp.createQue(pane);
-         // interface is down here mabe i should put it into separate class...
+         // interface is down here mabe I should put it into separate class...
         VBox controlPanel = new VBox(14);
         controlPanel.setPadding(new Insets(15));
         controlPanel.setStyle("-fx-background-color: #f4f4f6; -fx-border-color: #d1d1d6; -fx-border-width: 0 1px 0 0;");
@@ -175,7 +175,7 @@ public class AppFX extends Application {
                         if (activeNonVIPs.size() < maxNonVipsLimit) {
                             double strategyRoll = Math.random();
                             if (strategyRoll < regularCustomerProportion) {
-                                customer = new regularCustomer(timeInPoolsMs);
+                                customer = new RegularCustomer(timeInPoolsMs);
                             } else {
                                 customer = new ClientWithChild(timeInPoolsMs);
                             }

@@ -19,11 +19,11 @@ public final class SetUp {
     final static double lineStartY = 0;
     final static double lineEndY = 100;
 
-    // --- Vertical FlowPanes to handle top-to-bottom filling with wrapping columns ---
+    //  Vertical FlowPanes to handle top-to-bottom filling with wrapping columns
     public static final FlowPane normalQueueBox = new FlowPane(Orientation.VERTICAL);
     public static final FlowPane vipQueueBox = new FlowPane(Orientation.VERTICAL);
 
-    // --- Live Occupancy HUD Display Text Components ---
+    // --- Live Occupancy
     public static final Text normalCountLabel = new Text("Queue: 0 / 44");
     public static final Text vipCountLabel = new Text("Queue: 0 / 22");
 

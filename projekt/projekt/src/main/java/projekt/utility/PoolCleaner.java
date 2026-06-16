@@ -62,7 +62,7 @@ public class PoolCleaner implements Runnable {
                 Thread.sleep(TIME_BETWEEN_CLEANINGS);
                 Client.queLock.lock();
                 try {
-                    isCleaningPhase = true;
+                    isCleaningPhase = true; // zmienna zakazujaca wstepu nowym watkom
                     Platform.runLater(() -> {
                         if (componentLayoutWrapper != null) {
                             componentLayoutWrapper.setVisible(true);
