@@ -12,7 +12,7 @@ public final class ConfigReader {
     private static final int HARD_LIMIT_NON_VIPS = 44;
     private static final int HARD_LIMIT_VIPS = 22;
 
-    private int maxNonVips = HARD_LIMIT_NON_VIPS; // Default fallback if file is unreadable
+    private int maxNonVips = HARD_LIMIT_NON_VIPS; // Default fallback if file is unreadable or has too many therads
     private int maxVips = HARD_LIMIT_VIPS;
 
     public ConfigReader() {
@@ -35,21 +35,17 @@ public final class ConfigReader {
             String nonVipStr = props.getProperty("max_non_vips");
             if (nonVipStr != null) {
                 int parsed = Integer.parseInt(nonVipStr.trim());
-                // Enforce upper limit: Math.min guarantees it never exceeds 44
-                this.maxNonVips = Math.max(0, Math.min(parsed, HARD_LIMIT_NON_VIPS));
+                // wymusza aby wartosc byla pomiedzy dwoma limitami
+                this.maxNonVips = Math.clamp(parsed, 0, HARD_LIMIT_NON_VIPS);
             }
 
-            // 2. Process VIP setup configuration parameters
             String vipStr = props.getProperty("max_vips");
             if (vipStr != null) {
                 int parsed = Integer.parseInt(vipStr.trim());
-                // Enforce upper limit: Math.min guarantees it never exceeds 22
-                this.maxVips = Math.max(0, Math.min(parsed, HARD_LIMIT_VIPS));
+                this.maxVips = Math.clamp(parsed, 0, HARD_LIMIT_VIPS);
             }
-
             System.out.println("[Config] Initialized bounds successfully. Non-VIP Limit: "
                     + maxNonVips + ", VIP Limit: " + maxVips);
-
         } catch (IOException | NumberFormatException e) {
             System.err.println("[Config] Error processing file properties. Enforcing safe fallbacks (44/22).");
             this.maxNonVips = HARD_LIMIT_NON_VIPS;

@@ -37,12 +37,13 @@ public class regularCustomer extends Client {
         }
 
         final Pool targetPool = chosenPool;
-
+        // runLater pozwala na opzninie wykonia animacji chodzi o oszczednosc watku application JavyFX
         Platform.runLater(() -> {
+            // deleting from graphics
             SetUp.normalQueueBox.getChildren().remove(componentLayoutWrapper);
             goToChosenPool(targetPool.assginedPanel);
-
-            ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms), componentLayoutWrapper);
+            ScaleTransition shrink = new ScaleTransition(Duration.millis(timeItWantsToSpendms),
+                    componentLayoutWrapper);
             shrink.setToX(0.0);
             shrink.setToY(0.0);
             shrink.play();

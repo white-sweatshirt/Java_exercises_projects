@@ -30,22 +30,20 @@ public class AppFX extends Application {
     // Pace of client sessions inside the pools
     final int timeInPoolsMs = 3000;
 
-    // --- Dynamic Limit Parameters (Volatile to safely update across runtime engine loops) ---
+    // paramtrs of simulation set by user volatile is for safe updates
     private volatile int maxNonVipsLimit;
     private volatile int maxVipsLimit;
     private volatile double regularCustomerProportion = 0.75;
 
-    // --- Concurrent Thread Monitoring Lists (Fixes ConcurrentModificationExceptions) ---
+    // Lissts for managing threads
     private final List<Client> activeVIPs = new CopyOnWriteArrayList<>();
     private final List<Client> activeNonVIPs = new CopyOnWriteArrayList<>();
 
-    // --- State delta lookups to check text variations ---
     private int lastNonVipCount = 0;
     private int lastVipCount = 0;
 
     @Override
     public void start(Stage stage) {
-        // Step 1: Read numbers from file and enforce the strict upper limits rules right away
         ConfigReader config = new ConfigReader();
         this.maxNonVipsLimit = config.getMaxNonVips();
         this.maxVipsLimit = config.getMaxVips();
@@ -62,10 +60,7 @@ public class AppFX extends Application {
         Client.setMainPane(pane);
         Cashier.setPools(pools);
         Cashier cashier = SetUp.createQue(pane);
-
-        // =========================================================================
-        // STEP 2: CONSTRUCT CONTROL INTERFACE PANEL
-        // =========================================================================
+         // interface is down here mabe i should put it into separate class...
         VBox controlPanel = new VBox(14);
         controlPanel.setPadding(new Insets(15));
         controlPanel.setStyle("-fx-background-color: #f4f4f6; -fx-border-color: #d1d1d6; -fx-border-width: 0 1px 0 0;");
@@ -77,16 +72,16 @@ public class AppFX extends Application {
         Label controlTitle = new Label("LIMIT SETTINGS");
         controlTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #3a3a3c;");
 
-        // Slider A: Max limit for Non-VIPs (Max constraint 44, loaded from file position initialization)
         Label lblNonVipCap = new Label("Max Limit Non-VIP: " + maxNonVipsLimit);
+        // slider skonstruowany przez klase
         Slider sliderNonVip = new Slider(0, 44, maxNonVipsLimit);
         sliderNonVip.setBlockIncrement(1);
+        // add Listener powiadamia ze wartosc na pasku sie zmienila
         sliderNonVip.valueProperty().addListener((obs, oldVal, newVal) -> {
             maxNonVipsLimit = newVal.intValue();
             lblNonVipCap.setText("Max Limit Non-VIP: " + maxNonVipsLimit);
         });
 
-        // Slider B: Max limit for VIPs (Max constraint 22, loaded from file position initialization)
         Label lblVipCap = new Label("Max Limit VIP: " + maxVipsLimit);
         Slider sliderVip = new Slider(0, 22, maxVipsLimit);
         sliderVip.setBlockIncrement(1);
@@ -95,7 +90,6 @@ public class AppFX extends Application {
             lblVipCap.setText("Max Limit VIP: " + maxVipsLimit);
         });
 
-        // Slider C: Regular vs Family unit distribution proportion ratio split
         Label lblRegularProp = new Label("Regular Cust: 75%");
         Label lblFamilyProp = new Label("Family Unit: 25%");
         Slider sliderProportion = new Slider(0.0, 1.0, 0.75);
@@ -117,13 +111,9 @@ public class AppFX extends Application {
         pane.getChildren().add(controlPanel);
         stage.show();
 
-        // Bind text readouts to display configuration bounds accurately immediately on start
         SetUp.normalCountLabel.setText("Queue: 0 / " + maxNonVipsLimit);
         SetUp.vipCountLabel.setText("Queue: 0 / " + maxVipsLimit);
 
-        // =========================================================================
-        // THREAD 1: ISOLATED RUNTIME SCOREBOARD METRICS MONITOR
-        // =========================================================================
         Thread uiMetricsMonitorThread = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
@@ -155,11 +145,6 @@ public class AppFX extends Application {
                 Thread.currentThread().interrupt();
             }
         });
-        uiMetricsMonitorThread.setDaemon(true);
-
-        // =========================================================================
-        // THREAD 2: NATURAL GENERATION BACKGROUND SPRAWLER ENGINE
-        // =========================================================================
         Thread backendThread = new Thread(() -> {
             for (Pool p : pools) {
                 p.start();
@@ -175,7 +160,6 @@ public class AppFX extends Application {
                 while (!Thread.currentThread().isInterrupted()) {
                     Thread.sleep(20);
 
-                    // Safely remove dead client threads from our tracking metrics
                     activeVIPs.removeIf(client -> !client.isAlive());
                     activeNonVIPs.removeIf(client -> !client.isAlive());
 
@@ -183,13 +167,11 @@ public class AppFX extends Application {
                     Client customer = null;
 
                     if (randomValue < 0.20) {
-                        // Check against user-defined upper limit set by the slider component
                         if (activeVIPs.size() < maxVipsLimit) {
                             customer = new VIPClient(timeInPoolsMs);
                             activeVIPs.add(customer);
                         }
                     } else {
-                        // Check against user-defined upper limit set by the slider component
                         if (activeNonVIPs.size() < maxNonVipsLimit) {
                             double strategyRoll = Math.random();
                             if (strategyRoll < regularCustomerProportion) {

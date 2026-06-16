@@ -58,7 +58,6 @@ public abstract class Client extends Thread {
     @Override
     public abstract void run();
 
-    // General interface function for subclasses to safely try claiming a spot
     protected Pool claimFreePool() {
         for (Pool pool : allPools) {
             if (pool.tryEnter(this)) {

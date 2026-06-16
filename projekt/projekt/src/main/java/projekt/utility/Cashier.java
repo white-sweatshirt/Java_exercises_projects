@@ -8,8 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Cashier extends Thread {
     private static Pool[] pools;
-    ReentrantLock lock = new ReentrantLock();
-    Condition vipsEmpty = lock.newCondition();
+
 
     // Setter so AppFX can pass the initialized pools to the Cashier
     public static void setPools(Pool[] initializedPools) {
@@ -18,7 +17,6 @@ public class Cashier extends Thread {
 
     @Override
     public void run() {
-        // Run continuously while the program is active
         while (!isInterrupted()) {
             try {
                 administerPools();
@@ -39,7 +37,6 @@ public class Cashier extends Thread {
         for (int i = 0; i < pools.length; i++) {
             Pool p = pools[i];
             if (p != null) {
-                // We use synchronized getters (defined below) to read the pool state safely
                 System.out.println("Pool " + i + ": " + p.getCurrentPeopleCount() + "/" + p.getMaxCapacity() + " people.");
             }
         }

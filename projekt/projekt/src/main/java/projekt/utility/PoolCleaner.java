@@ -10,18 +10,14 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
-import java.util.Random;
-
 import projekt.Consumer.Client;
 import projekt.pool.Pool;
 
 public class PoolCleaner implements Runnable {
 
     private final long TIME_BETWEEN_CLEANINGS = 5000;
-    private final Random random = new Random();
     private static volatile boolean isCleaningPhase = false;
-
-    // --- Visual Components ---
+    // vbox jest po to aby pod kolem byl tekst
     private VBox componentLayoutWrapper;
     private Circle cleanerCircle;
     private FadeTransition blinkAnimation;
@@ -63,21 +59,18 @@ public class PoolCleaner implements Runnable {
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                // Wait out the interval before triggering a cleaning session
                 Thread.sleep(TIME_BETWEEN_CLEANINGS);
-
-                // PHASE 1: Announce cleaning phase to close entrance queues
                 Client.queLock.lock();
                 try {
                     isCleaningPhase = true;
                     Platform.runLater(() -> {
                         if (componentLayoutWrapper != null) {
                             componentLayoutWrapper.setVisible(true);
-                            blinkAnimation.play(); // Fixed: Explicitly starting animation
+                            blinkAnimation.play();
                         }
                     });
                 } finally {
-                    Client.queLock.unlock(); // CRITICAL: Release lock so active pool users can exit!
+                    Client.queLock.unlock();
                 }
 
                 // PHASE 2: Passive wait loop (No locks held, letting pools naturally drain)
@@ -85,14 +78,12 @@ public class PoolCleaner implements Runnable {
                     Thread.sleep(200);
                 }
 
-                // PHASE 3: Perform actual structural maintenance
                 Client.queLock.lock();
                 try {
                     Platform.runLater(() -> cleanerCircle.setFill(Color.DARKRED));
                     long cleaningDuration = 4000;
                     Thread.sleep(cleaningDuration);
                 } finally {
-                    // PHASE 4: Open up the complex and alert waiting queues
                     isCleaningPhase = false;
                     Platform.runLater(() -> {
                         if (componentLayoutWrapper != null) {
